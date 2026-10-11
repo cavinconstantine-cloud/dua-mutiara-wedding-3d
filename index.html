@@ -303,7 +303,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     }
   }
   /* tall foliage centrepiece on a slim gold stem, for the ivory garden theme */
-  /* Sasa's reference: sage walls, moss tables, crimson backdrop and floors, with champagne, tortoiseshell and bronze as accents */
+  /* Sasa's reference: champagne walls, moss tables, crimson backdrop and floors, with champagne, tortoiseshell and bronze as accents */
   var PAL4 = ['#5a1230', '#6e1a3a', '#7a1f40', '#3f0c22', '#cdb89a', '#e0cfb2', '#3f5a2a', '#8f9c78', '#56663a', '#5a1230'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); });
   var LEAF = ['#56602f', '#3d4a26', '#6f7d3c', '#8a9a50'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); }), LEAFW = new T.Color('#f4eedd').convertSRGBToLinear();
   function tree(x, z){
@@ -751,7 +751,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   btnLabels.addEventListener('click', function(){ showLabels = !showLabels; btnLabels.setAttribute('aria-pressed', showLabels ? 'true' : 'false'); });
   /* decor theme switch: recolours shared fabric, floors, chairs and flowers, and shows each theme's own pieces */
   var themeI = 0, themeB = false, themeC = false, themeD = false, selTheme = document.getElementById('selTheme');
-  var THEME = [[mWallDrape, 0x161514, 0x9c8160, 0xb3a586, 0x8f9c78], [mDrape, 0x5a5c3a, 0xa98c68, 0xbcae8e, 0x4a1028], [mBurg, 0x6e1423, 0xb89c78, 0xcbbd9c, 0xcdb89a], [mCloth, CLOTH.getHex(), 0xb39c7c, 0xc2b494, 0x2c4124], [mRunner, 0x6e1423, 0x8f6f58, 0x55602f, 0x5a1230], [mChair, 0x15120f, 0xb39256, 0x3a2a1c, 0x3a1a12], [mGloss, 0x070707, 0xefe8da, 0xefe8da, 0x4a1028], [mPost, 0x2a211a, 0xb39256, 0xcbbd9c, 0x5a4632], [mGlass, 0xffffff, 0xffc27a, 0xffd9a0, 0xffc27a], [mSwag, 0xb89c78, 0xb89c78, 0xcfc2a2, 0xcdb89a], [mCush, 0xe9e1d0, 0xe9e1d0, 0xe9e1d0, 0xcdb89a], [mDance, 0x070707, 0xefe8da, 0xefe8da, 0xcdb89a], [mDance2, 0x070707, 0xefe8da, 0xefe8da, 0x5a4632], [mIvory, 0xf2ead8, 0xf2ead8, 0xf2ead8, 0x9a7650]];
+  var THEME = [[mWallDrape, 0x161514, 0x9c8160, 0xb3a586, 0xcdb89a], [mDrape, 0x5a5c3a, 0xa98c68, 0xbcae8e, 0x4a1028], [mBurg, 0x6e1423, 0xb89c78, 0xcbbd9c, 0xcdb89a], [mCloth, CLOTH.getHex(), 0xb39c7c, 0xc2b494, 0x2c4124], [mRunner, 0x6e1423, 0x8f6f58, 0x55602f, 0x5a1230], [mChair, 0x15120f, 0xb39256, 0x3a2a1c, 0x3a1a12], [mGloss, 0x070707, 0xefe8da, 0xefe8da, 0x4a1028], [mPost, 0x2a211a, 0xb39256, 0xcbbd9c, 0x5a4632], [mGlass, 0xffffff, 0xffc27a, 0xffd9a0, 0xffc27a], [mSwag, 0xb89c78, 0xb89c78, 0xcfc2a2, 0xcdb89a], [mCush, 0xe9e1d0, 0xe9e1d0, 0xe9e1d0, 0xcdb89a], [mDance, 0x070707, 0xefe8da, 0xefe8da, 0xcdb89a], [mDance2, 0x070707, 0xefe8da, 0xefe8da, 0x5a4632], [mIvory, 0xf2ead8, 0xf2ead8, 0xf2ead8, 0x9a7650]];
   var TH = { chairM: [0.1, 0.75, 0.15, 0.2], chairR: [0.42, 0.35, 0.5, 0.25], postM: [0.5, 0.8, 0.1, 0.85], glossR: [0.2, 0.14, 0.14, 0.2], glossE: [0.55, 0.9, 0.9, 0.45], glass: [0.22, 0.38, 0.34, 0.34], hemi: [0xffe6c8, 0xffd9a8, 0xffe2b8, 0xffe0bc] };
   function applyTheme(i){
     themeI = i; themeB = i === 1; themeC = i === 2; themeD = i === 3;
