@@ -29,6 +29,10 @@ h1{margin:0;font-family:var(--display);font-weight:600;font-size:clamp(26px,4.2v
 .rail{display:flex;gap:8px;overflow-x:auto;pointer-events:auto;padding-bottom:2px;scrollbar-width:none}
 .rail::-webkit-scrollbar{display:none}
 button{font-family:var(--ui);font-size:14px;font-weight:600;color:var(--cream);background:var(--panel);border:1px solid var(--line);border-radius:22px;min-height:44px;padding:0 16px;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+label.pick{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:22px;min-height:44px;padding:0 6px 0 14px}
+label.pick select{font-family:var(--ui);font-size:14px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--cream);background:transparent;border:0;min-height:42px;padding:0 6px;cursor:pointer}
+label.pick select option{color:#1a1412;background:#efe6d8}
+label.pick select:focus-visible{outline:2px solid var(--cream);outline-offset:2px;border-radius:16px}
 button:focus-visible{outline:2px solid var(--cream);outline-offset:2px}
 button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:var(--cream)}
 .pad{display:grid;grid-template-columns:repeat(3,46px);grid-template-rows:repeat(2,46px);gap:6px;pointer-events:auto;flex:none}
@@ -47,6 +51,13 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
 <div class="dock">
   <div class="row">
     <div class="tools">
+      <label class="pick" for="selTheme">Dekor
+        <select id="selTheme">
+          <option value="0">Olive &amp; burgundy</option>
+          <option value="1">Drapery champagne</option>
+          <option value="2">Ivory garden</option>
+        </select>
+      </label>
       <button type="button" id="btnBright" aria-pressed="true">Lampu terang</button>
       <button type="button" id="btnEntry" aria-pressed="false">Lampu entry</button>
       <button type="button" id="btnLabels" aria-pressed="true">Nomor meja</button>
@@ -120,6 +131,10 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   var MATS = [];
   var walls = new T.Group(), tall = new T.Group(), labels = new T.Group();
   scene.add(walls); scene.add(tall); scene.add(labels);
+  /* decor themes: gA holds pieces only the moody theme has, gB and gBTall only the drapery theme */
+  var gA = new T.Group(), gB = new T.Group(), gBTall = new T.Group();
+  scene.add(gA); scene.add(gB); scene.add(gBTall); gB.visible = false; gBTall.visible = false;
+  var gC = new T.Group(), gCTall = new T.Group(); scene.add(gC); scene.add(gCTall); gC.visible = false; gCTall.visible = false;
 
   function box(parent, mat, x0, y0, z0, x1, y1, z1, cast){
     var m = new T.Mesh(new T.BoxGeometry(Math.abs(x1 - x0), y1 - y0, Math.abs(z1 - z0)), mat);
@@ -150,7 +165,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   }
   /* instancing collector */
   var inst = {};
-  function def(key, geo, mat, cast, parent){ inst[key] = { geo: geo, mat: mat, m: [], c: [], cast: cast !== false, parent: parent || scene }; }
+  function def(key, geo, mat, cast, parent){ inst[key] = { geo: geo, mat: mat, m: [], c: [], c2: [], c3: [], cast: cast !== false, parent: parent || scene }; }
   var _q = new T.Quaternion(), _e = new T.Euler(), _p = new T.Vector3(), _s = new T.Vector3();
   function M(x, y, z, ry, sx, sy, sz){
     _e.set(0, ry || 0, 0); _q.setFromEuler(_e); _p.set(x, y, -z); _s.set(sx, sy, sz);
@@ -160,14 +175,14 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     _q.set(0, 0, 0, 1); _p.set(lx, ly, lz); _s.set(sx, sy, sz);
     return new T.Matrix4().compose(_p, _q, _s);
   }
-  function put(key, mat, color){ inst[key].m.push(mat); if (color) inst[key].c.push(color); }
+  function put(key, mat, color, color2, color3){ inst[key].m.push(mat); if (color) inst[key].c.push(color); if (color2) inst[key].c2.push(color2); if (color3) inst[key].c3.push(color3); }
   function flush(){
     for (var k in inst) {
       var d = inst[k]; if (!d.m.length) continue;
       var im = new T.InstancedMesh(d.geo, d.mat, d.m.length);
       for (var i = 0; i < d.m.length; i++) { im.setMatrixAt(i, d.m[i]); if (d.c.length) im.setColorAt(i, d.c[i]); }
       im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true;
-      im.castShadow = d.cast; im.receiveShadow = true; im.frustumCulled = false; d.parent.add(im);
+      im.castShadow = d.cast; im.receiveShadow = true; im.frustumCulled = false; d.parent.add(im); d.mesh = im;
     }
   }
 
@@ -198,6 +213,12 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   var mGold = std(0xb08d57, 0.3, 0.9);
   var mCloth = std(CLOTH.getHex(), 0.88), mRunner = std(new T.Color('#6e1423').getHex(), 0.75);
   var mDrape = std(0x5a5c3a, 0.92, 0, { side: T.DoubleSide }), mBurg = std(0x6e1423, 0.78, 0, { side: T.DoubleSide });
+  /* amber uplight for fabric in the drapery theme: bright at the floor, fading up the pleats */
+  var upTex = canvasTex(8, 256, function(g, w, h){ var gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#000000'); gr.addColorStop(0.35, '#1c0e04'); gr.addColorStop(0.75, '#8a4a16'); gr.addColorStop(1, '#ffb45e'); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
+  var shadeTex = canvasTex(8, 256, function(g, w, h){ var gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#4a2a0c'); gr.addColorStop(0.5, '#e89a48'); gr.addColorStop(1, '#ffdca4'); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
+  mDrape.emissive = new T.Color(0xffffff); mDrape.emissiveMap = upTex; mDrape.emissiveIntensity = 0;
+  var mShade = std(0xb8976a, 0.85, 0, { side: T.DoubleSide, emissive: 0xffffff, emissiveMap: shadeTex, emissiveIntensity: 1 });
+  var mSwag = std(0xb89c78, 0.85, 0, { side: T.DoubleSide, emissive: 0xff9a3c, emissiveIntensity: 0.1 });
   var mChair = std(0x15120f, 0.42, 0.1), mCush = std(0xe9e1d0, 0.9), mCream = std(0xe6dbc6, 0.85, 0, { side: T.DoubleSide });
   var mIvory = std(0xf2ead8, 0.35), mWax = std(0xf4ebd6, 0.6, 0, { emissive: 0x6a4416, emissiveIntensity: 0.55 });
   var mFlame = new T.MeshBasicMaterial({ color: new T.Color(0xffd894).convertSRGBToLinear() });
@@ -213,6 +234,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   def('plate', UC24, mIvory, false); def('napkin', UB, mRunner, false); def('glass', UC, mGlass, false);
   def('fl', new T.IcosahedronGeometry(1, small ? 0 : 1), mFlower, !small);
   def('wax', UC, mWax, false); def('flame', new T.SphereGeometry(1, 8, 6), mFlame, false); def('hurr', new T.CylinderGeometry(1, 1, 1, 16, 1, true), mGlass, false);
+  def('leaf', new T.IcosahedronGeometry(1, 0), mFlower, false, gC);
   def('crystal', new T.OctahedronGeometry(1, 0), mCrystal, false);
   def('crystalTall', new T.OctahedronGeometry(1, 0), mCrystal, false, tall);
   def('down', new T.CylinderGeometry(1, 1, 1, 12), mLightStrip, false, tall);
@@ -224,18 +246,33 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     def('rcloth', g, mCloth);
   })();
 
-  var glowBig = [], glowSmall = [];
+  var glowBig = [], glowSmall = [], glowC = [];
   var PAL = (function(){
     var c = function(h){ return new T.Color(h); }, b = BLOOM;
     return [b.clone().multiplyScalar(0.6), b.clone(), b.clone(), b.clone().multiplyScalar(1.35), b.clone().lerp(c('#c0327a'), 0.55), b.clone().lerp(c('#c0327a'), 0.3), c('#9aa858'), c('#5e6634'), c('#465028'), c('#b87a76')].map(function(x){ return x.convertSRGBToLinear(); });
   })();
+  /* drapery theme florals: dusty rust, dried rose, mauve and cream, as in the references */
+  var PAL2 = ['#8a4a3a', '#6b3b2e', '#a8644a', '#b98a7a', '#8c5a5e', '#70484c', '#e6d8c0', '#6f7350', '#4a2024', '#c9a78c'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); }), ai = 0;
+  /* ivory garden theme florals: white and cream blooms in green foliage */
+  var PAL3 = ['#f2ecdc', '#e8dfc8', '#fff6e6', '#d8cfae', '#7c8a4a', '#56602f', '#3d4a26', '#9aa858', '#f0e2c0', '#c9c08a'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); });
   function mound(cx, y0, cz, rx, h, rz, n){
     n = Math.round(n * (small ? 1.5 : 2.4));
     for (var i = 0; i < n; i++) {
       var u = rnd() * 2 - 1, w = rnd() * 2 - 1, d = u * u + w * w;
       if (d > 1) { var k = rnd() / Math.sqrt(d); u *= k; w *= k; }
       var t = 1 - (u * u + w * w), y = y0 + 0.05 + h * t * (0.25 + 0.75 * rnd()), s = 0.04 + 0.055 * rnd();
-      put('fl', M(cx + u * rx, y, cz + w * rz, rnd() * 6, s, s * (0.6 + 0.35 * rnd()), s), PAL[(rnd() * PAL.length) | 0].clone().multiplyScalar(0.5 + 0.45 * rnd()));
+      var ci = (rnd() * PAL.length) | 0, ck = 0.5 + 0.45 * rnd();
+      put('fl', M(cx + u * rx, y, cz + w * rz, rnd() * 6, s, s * (0.6 + 0.35 * rnd()), s), PAL[ci].clone().multiplyScalar(ck), PAL2[ci].clone().multiplyScalar(ck + 0.05), PAL3[ci].clone().multiplyScalar(ck + 0.1));
+    }
+  }
+  /* tall foliage centrepiece on a slim gold stem, for the ivory garden theme */
+  var LEAF = ['#56602f', '#3d4a26', '#6f7d3c', '#8a9a50'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); }), LEAFW = new T.Color('#f4eedd').convertSRGBToLinear();
+  function tree(x, z){
+    cyl(gC, mGold, x, z, 0.022, 0.76, 2.35, 6, false);
+    for (var i = 0; i < 90; i++) {
+      var a = rnd() * 6.2832, b = (rnd() - 0.5) * 3.1416, r = Math.pow(rnd(), 0.4), s = 0.07 + 0.09 * rnd();
+      var c = rnd() < 0.14 ? LEAFW : LEAF[(rnd() * LEAF.length) | 0];
+      put('leaf', M(x + 0.8 * r * Math.cos(a) * Math.cos(b), 2.8 + 0.6 * r * Math.sin(b), z + 0.8 * r * Math.sin(a) * Math.cos(b), rnd() * 6, s * 1.6, s * 0.5, s), c.clone().multiplyScalar(0.6 + 0.5 * rnd()));
     }
   }
   function candle(x, y0, z, h, hurricane){
@@ -316,7 +353,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   wallSeg(2, -5, 36, -15, 4, mWallF); wallSeg(36, -15, 45, -15, 4, mWallF); wallSeg(2, -5, 2, 0, 4, mWallF); wallSeg(45, -15, 45, 0, 4, mWallF);
   box(tall, mWall, 6.7, 3.2, -0.12, 8.7, 7, 0.12, false); box(tall, mWall, 38, 3.2, -0.12, 40, 7, 0.12, false);
   /* every ballroom wall is covered floor to ceiling in pleated fabric in the theme's olive; only the two working doors stay open */
-  var mWallDrape = std(0x161514, 0.9, 0, { side: T.DoubleSide });
+  var mWallDrape = std(0x161514, 0.9, 0, { side: T.DoubleSide, emissive: 0xffffff, emissiveMap: upTex, emissiveIntensity: 0 });
   function wallDrape(parent, x0, z0, x1, z1, y0, y1){ var d = drape(parent, mWallDrape, x0, z0, x1, z1, y0, y1); d.castShadow = false; return d; }
   wallDrape(walls, 0.3, 19.72, 17.5, 19.72, 0, 7); wallDrape(walls, 29.5, 19.72, 44.7, 19.72, 0, 7);
   wallDrape(walls, 0.22, 0.3, 0.22, 19.7, 0, 7); wallDrape(walls, 44.78, 0.3, 44.78, 19.7, 0, 7);
@@ -399,7 +436,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     g.fillStyle = 'rgba(120,116,90,0.14)'; g.beginPath(); g.moveTo(0, h); g.quadraticCurveTo(w * 0.25, h * 0.62, w * 0.5, h * 0.8); g.quadraticCurveTo(w * 0.78, h * 0.62, w, h); g.fill();
   });
   var mMural = std(0xffffff, 0.9, 0, { map: muralTex, emissive: 0xffffff, emissiveMap: muralTex, emissiveIntensity: 0.28 });
-  (function(){ var m = new T.Mesh(arch(4.8, 4.7), mMural); m.position.set(23.5, 0.6, -19.62); m.receiveShadow = true; scene.add(m); })();
+  (function(){ var m = new T.Mesh(arch(4.8, 4.7), mMural); m.position.set(23.5, 0.6, -19.62); m.receiveShadow = true; gA.add(m); })();
   box(scene, mCloth, 22.4, 0.6, 17.6, 24.6, 1.38, 18.4);
   chair(22.95, 18.85, 0, -1, 0.6); chair(24.05, 18.85, 0, -1, 0.6);
   mound(20.4, 0.6, 17.6, 1.6, 1.6, 0.85, 360); mound(26.6, 0.6, 17.6, 1.6, 1.6, 0.85, 360);
@@ -436,6 +473,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     mound(cx, 0.76, cz, 0.3, 0.42, 0.3, 36);
     candle(cx + 0.4, 0.76, cz + 0.1, 0.22, true); candle(cx - 0.3, 0.76, cz - 0.3, 0.3, true); candle(cx - 0.14, 0.76, cz + 0.4, 0.16, true);
     textSprite(String(num), cx, 1.7, cz, 'num');
+    if (num % 2 === 0) tree(cx, cz); else { cyl(gC, mGold, cx, cz, 0.012, 0.76, 1.2, 6, false); shade(gC, cx, cz, 1.16, 0.07, 0.14, 0.22, glowC); }
   }
   [[13.5, 3.5], [13.5, 8.5], [13.5, 13.5], [10, 6], [10, 11], [6.5, 3.5], [6.5, 8.5], [6.5, 13.5], [3, 6], [3, 11]].forEach(function(p, i){ roundTable(p[0], p[1], i + 1); });
   [[32.8, 8.2], [32.8, 12.7], [32.8, 17.2], [35.9, 10.4], [35.9, 15], [39, 8.2], [39, 12.7], [39, 17.2], [42.1, 10.4], [42.1, 15]].forEach(function(p, i){ roundTable(p[0], p[1], i + 11); });
@@ -449,6 +487,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     [-0.95, 0, 0.95].forEach(function(t){ mound(cx, 0.76, cz + t, 0.14, 0.3, 0.34, 16); });
     candle(cx, 0.77, cz - 0.48, 0.26, true); candle(cx, 0.77, cz + 0.48, 0.26, true);
     textSprite(name, cx, 1.7, cz, 'pill');
+    cyl(gC, mGold, cx, cz, 0.012, 0.76, 1.2, 6, false); shade(gC, cx, cz, 1.16, 0.07, 0.14, 0.22, glowC);
   }
   [7.8, 10.8, 13.8].forEach(function(z, i){ familyTable(17.1, z, 'Kel. A' + (i + 1)); familyTable(29.9, z, 'Kel. B' + (i + 1)); });
   /* keluarga inti: 10 seats on one side, facing the pelaminan straight across the dance floor */
@@ -462,7 +501,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   /* ---------- foyer ---------- */
   box(scene, mGloss, 11, 0, -7.1, 13.6, 0.02, -2.1, false);
   drape(scene, mDrape, 11, -7.2, 11, -2.0, 0, 3.5);
-  (function(){ var m = new T.Mesh(arch(1.8, 3.05), mMural); m.rotation.y = Math.PI / 2; m.position.set(11.2, 0.02, 4.6); scene.add(m); })();
+  (function(){ var m = new T.Mesh(arch(1.8, 3.05), mMural); m.rotation.y = Math.PI / 2; m.position.set(11.2, 0.02, 4.6); gA.add(m); })();
   mound(11.9, 0, -6.6, 0.7, 1.3, 0.6, 150); mound(11.9, 0, -2.6, 0.7, 1.3, 0.6, 150); mound(11.7, 1.5, -6.8, 0.4, 1.0, 0.35, 40);
   candle(12.8, 0, -6.0, 0.4, true); candle(12.9, 0, -3.2, 0.4, true); candle(13.1, 0, -5.7, 0.25, true);
   [17.7, 20.7].forEach(function(x){
@@ -490,9 +529,62 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   function arc(cx, cz, R, a0){
     var m = new T.Mesh(new T.CylinderGeometry(R, R, 2.3, 28, 1, true, (a0 + 90) * Math.PI / 180, Math.PI / 2), mCream);
     m.position.set(cx, 1.15, -cz); m.castShadow = true; m.receiveShadow = true; scene.add(m);
-    for (var i = 0; i < 90; i++) { var a = (a0 + rnd() * 90) * Math.PI / 180, top = rnd() < 0.6, s = 0.07 + rnd() * 0.08; put('fl', M(cx + R * Math.cos(a), top ? 2.3 + rnd() * 0.22 : 0.08 + rnd() * 0.3, cz + R * Math.sin(a) + (top ? 0 : (rnd() - 0.5) * 0.3), rnd() * 6, s, s * 0.8, s), PAL[(rnd() * PAL.length) | 0].clone().multiplyScalar(0.8 + 0.4 * rnd())); }
+    for (var i = 0; i < 90; i++) { var a = (a0 + rnd() * 90) * Math.PI / 180, top = rnd() < 0.6, s = 0.07 + rnd() * 0.08; put('fl', M(cx + R * Math.cos(a), top ? 2.3 + rnd() * 0.22 : 0.08 + rnd() * 0.3, cz + R * Math.sin(a) + (top ? 0 : (rnd() - 0.5) * 0.3), rnd() * 6, s, s * 0.8, s), PAL[ai = (rnd() * PAL.length) | 0].clone().multiplyScalar(0.7), PAL2[ai].clone().multiplyScalar(0.85), PAL3[ai].clone().multiplyScalar(0.85)); }
   }
   arc(36.5, 0.5, 3, 200); arc(36.5, -12.5, 3.2, 70);
+
+  /* ---------- drapery theme pieces: glowing pleated fabric cones, lantern columns, corner drapes and a swag ceiling over the pelaminan ---------- */
+  function pleated(rTop, rBot, h, pleats){
+    var g = new T.CylinderGeometry(rTop, rBot, h, 120, 6, true), p = g.attributes.position;
+    for (var i = 0; i < p.count; i++) { var x = p.getX(i), z = p.getZ(i), k = 1 + 0.035 * Math.sin(Math.atan2(x, z) * pleats); p.setX(i, x * k); p.setZ(i, z * k); }
+    g.computeVertexNormals(); return g;
+  }
+  function shade(parent, x, z, y0, rTop, rBot, h, glow){
+    var m = new T.Mesh(pleated(rTop, rBot, h, Math.round(26 + rBot * 22)), mShade); m.position.set(x, y0 + h / 2, -z); parent.add(m);
+    (glow || glowBigB).push(x, y0 + h * 0.3, -z);
+  }
+  var glowBigB = [];
+  shade(gB, 19.3, 19.0, 0.6, 0.12, 2.0, 5.0); shade(gB, 23.5, 19.15, 0.6, 0.12, 2.3, 5.7); shade(gB, 27.7, 19.0, 0.6, 0.12, 2.0, 5.0);
+  [21.4, 25.6].forEach(function(x){ for (var k = 0; k < 3; k++) shade(gB, x, 19.35, 0.8 + k * 1.05, 0.36, 0.36, 0.85); });
+  [25.4, 28.4, 31.4, 34.4].forEach(function(x){ shade(gB, x, 2.55, 0, 0.2, 0.6, 1.5); });
+  shade(gB, 20.2, 15.3, 0, 0.2, 0.62, 1.7); shade(gB, 26.8, 15.3, 0, 0.2, 0.62, 1.7);
+  shade(gB, 11.7, -4.6, 0, 0.1, 1.5, 3.3); shade(gB, 12.9, -7.3, 0, 0.18, 0.55, 1.5); shade(gB, 12.9, -1.9, 0, 0.18, 0.55, 1.5);
+  [[CX0, CZ0, 1, 1], [CX1, CZ0, -1, 1], [CX0, CZ1, 1, -1], [CX1, CZ1, -1, -1]].forEach(function(c){
+    drape(gB, mDrape, c[0], c[1], c[0] + c[2] * 0.9, c[1], 0, CH - 0.6); drape(gB, mDrape, c[0], c[1], c[0], c[1] + c[3] * 0.9, 0, CH - 0.6);
+  });
+  (function(){
+    var g = new T.PlaneGeometry(12, 4.2, 140, 20), p = g.attributes.position;
+    for (var i = 0; i < p.count; i++) { var u = (p.getX(i) + 6) / 12 * 4, f = u - Math.floor(u), v = (p.getY(i) + 2.1) / 4.2; p.setZ(i, -0.8 * Math.sin(Math.PI * f) * (0.5 + 0.5 * Math.sin(Math.PI * v)) + 0.03 * Math.sin(p.getY(i) * 26)); }
+    g.computeVertexNormals();
+    var m = new T.Mesh(g, mSwag); m.rotation.x = -Math.PI / 2; m.position.set(23.5, 6.8, -18.0); gBTall.add(m);
+  })();
+  /* ---------- ivory garden theme pieces: a draped swag ceiling across the whole room, a gathered fabric dome over the dance floor, tall foliage centrepieces and table lamps ---------- */
+  (function(){
+    var g = new T.PlaneGeometry(45, 20, 220, 40), p = g.attributes.position;
+    for (var i = 0; i < p.count; i++) { var u = (p.getX(i) + 22.5) / 45 * 6, f = u - Math.floor(u), v = (p.getY(i) + 10) / 20; p.setZ(i, -0.95 * Math.sin(Math.PI * f) * (0.6 + 0.4 * Math.sin(Math.PI * v)) + 0.035 * Math.sin(p.getY(i) * 22)); }
+    g.computeVertexNormals();
+    var m = new T.Mesh(g, mSwag); m.rotation.x = -Math.PI / 2; m.position.set(22.5, 6.52, -10); gCTall.add(m);
+  })();
+  (function(){
+    var pts = []; for (var k = 0; k <= 14; k++) { var a = k / 14 * Math.PI / 2; pts.push(new T.Vector2(4.7 * Math.sin(a) + 0.001, 1.5 * Math.cos(a))); }
+    pts.push(new T.Vector2(4.75, -0.35));
+    var g = new T.LatheGeometry(pts, 120), p = g.attributes.position;
+    for (var i = 0; i < p.count; i++) { var x = p.getX(i), z = p.getZ(i), y = p.getY(i), ang = Math.atan2(x, z), r = Math.hypot(x, z) / 4.7, kk = 1 + 0.03 * Math.sin(ang * 44) * r; p.setX(i, x * kk); p.setZ(i, z * kk); if (y < 0.3) p.setY(i, y - 0.22 * Math.abs(Math.sin(ang * 6)) * r); }
+    g.computeVertexNormals();
+    var m = new T.Mesh(g, mSwag); m.position.set(23.5, 4.8, -9); gCTall.add(m);
+  })();
+
+  /* petal pattern on the dance floor, ivory garden theme only */
+  (function(){
+    var tex = canvasTex(1024, 1024, function(g, w, h){
+      g.fillStyle = '#f3ecdc'; g.fillRect(0, 0, w, h); g.translate(w / 2, h / 2);
+      [[470, 26, 60, 150], [330, 20, 52, 120], [210, 14, 46, 95], [110, 9, 36, 70]].forEach(function(r){
+        for (var i = 0; i < r[1]; i++) { g.save(); g.rotate(i / r[1] * 6.2832); g.fillStyle = '#b3a17f'; g.beginPath(); g.ellipse(0, -r[0] + r[3] / 2, r[2] / 2, r[3] / 2, 0, 0, 6.2832); g.fill(); g.restore(); }
+      });
+      g.fillStyle = '#b3a17f'; g.beginPath(); g.arc(0, 0, 34, 0, 6.2832); g.fill();
+    });
+    var m = new T.Mesh(new T.CircleGeometry(2.62, 72), std(0xffffff, 0.22, 0, { map: tex })); m.rotation.x = -Math.PI / 2; m.position.set(23.5, 0.149, -9); m.receiveShadow = true; gC.add(m);
+  })();
 
   /* ---------- labels ---------- */
   [['PELAMINAN', 23.5, 18.6], ['DANCE FLOOR', 23.5, 9], ['MUSIC', 5.5, 18.6], ['STALL MAKANAN', 2.4, 16.6], ['STALL MAKANAN', 42.6, 6.6], ['CATWALK', 31.5, 4.5], ['PINTU MASUK', 39, -1.4], ['PINTU', 7.7, -1.2], ['2 PINTU DITUTUP', 23.5, -1.2], ['PHOTOBOOTH', 13.4, -4.6], ['REGISTRASI', 20.5, -7.0], ['WELCOME SIGN', 35.6, -6.8], ['TANGGA', 42.3, -3.6], ['LIFT', 41.5, -12.5]].forEach(function(a){ textSprite(a[0], a[1], 0.6, a[2], 'area'); });
@@ -507,13 +599,15 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     var p = new T.Points(g, m); p.frustumCulled = false; parent.add(p); return m;
   }
   var glowMatA = points(glowBig, 0.55, scene), glowMatB = points(glowSmall, 0.2, scene);
+  points(glowBigB, 2.4, gB).opacity = 0.16;
+  points(glowC, 0.7, gC).opacity = 0.55;
 
   /* ---------- lights ---------- */
   /* two lighting modes: every light has a "terang" level and an "entry" level, and the frame loop fades between them */
   var LS = [], BEAMS = [], lm = 0, lmTarget = 0, lmApplied = -1, STRIPBASE = mLightStrip.color.clone();
-  function reg(l, a, b){ LS.push([l, a, b]); l.intensity = a; return l; }
-  var hemi = new T.HemisphereLight(0xffe6c8, 0x15100d, 0.5); scene.add(hemi); reg(hemi, 0.5, 0.05);
-  reg(canopyLight, 1.25, 0.3); fixLights.forEach(function(l){ reg(l, 0.75, 0); });
+  function reg(l, a, b, w){ LS.push([l, a, b, w]); l.intensity = a; return l; }
+  var hemi = new T.HemisphereLight(0xffe6c8, 0x15100d, 0.5); scene.add(hemi); reg(hemi, 0.5, 0.05, 1);
+  reg(canopyLight, 1.25, 0.3); fixLights.forEach(function(l){ reg(l, 0.75, 0, 1); });
   var beamTex = canvasTex(8, 128, function(g, w, h){ var gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#ffffff'); gr.addColorStop(1, '#3a342c'); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
   function beam(x, y, z, tx, ty, tz, angle){
     var a = new T.Vector3(x, y, -z), b = new T.Vector3(tx, ty, -tz), h = a.distanceTo(b);
@@ -528,9 +622,9 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     return s;
   }
   reg(spot(23.5, 6.8, 11.5, 23.5, 1.6, 19, 0xfff0dc, 1.7, 0.55, 0.7, 30, true, small ? 1024 : 2048), 1.7, 2.3);
-  reg(spot(8.5, 6.9, 9, 8.5, 0, 9, 0xffe2c0, 1.05, 1.05, 0.8, 24, !small, 1024), 1.05, 0);
-  reg(spot(37.5, 6.9, 12, 37.5, 0, 12, 0xffe2c0, 1.05, 1.05, 0.8, 24, !small, 1024), 1.05, 0);
-  reg(spot(30, 6.9, 4, 29, 0, 4.5, 0xffe2c0, 0.8, 1.0, 0.8, 22, false), 0.8, 0);
+  reg(spot(8.5, 6.9, 9, 8.5, 0, 9, 0xffe2c0, 1.05, 1.05, 0.8, 24, !small, 1024), 1.05, 0, 1);
+  reg(spot(37.5, 6.9, 12, 37.5, 0, 12, 0xffe2c0, 1.05, 1.05, 0.8, 24, !small, 1024), 1.05, 0, 1);
+  reg(spot(30, 6.9, 4, 29, 0, 4.5, 0xffe2c0, 0.8, 1.0, 0.8, 22, false), 0.8, 0, 1);
   spot(15.5, 3.8, -4.6, 11.2, 1.4, -4.6, 0xfff0dc, 1.2, 0.7, 0.7, 12, false);
   /* entry mode: two crossing spots onto the pelaminan and one follow spot on the entrance door */
   [[13.5, 6.8, 6, 23.5, 1.7, 18.2, 0.2], [33.5, 6.8, 6, 23.5, 1.7, 18.2, 0.2], [33, 6.8, 9, 39, 0.9, 1.8, 0.15]].forEach(function(e){
@@ -597,6 +691,24 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   /* labels and tour toggles */
   var showLabels = true, btnLabels = document.getElementById('btnLabels'), btnTour = document.getElementById('btnTour'), tourTimer = null, tourIdx = 0;
   btnLabels.addEventListener('click', function(){ showLabels = !showLabels; btnLabels.setAttribute('aria-pressed', showLabels ? 'true' : 'false'); });
+  /* decor theme switch: recolours shared fabric, floors, chairs and flowers, and shows each theme's own pieces */
+  var themeI = 0, themeB = false, themeC = false, selTheme = document.getElementById('selTheme');
+  var THEME = [[mWallDrape, 0x161514, 0x9c8160, 0xb3a586], [mDrape, 0x5a5c3a, 0xa98c68, 0xbcae8e], [mBurg, 0x6e1423, 0xb89c78, 0xcbbd9c], [mCloth, CLOTH.getHex(), 0xb39c7c, 0xc2b494], [mRunner, 0x6e1423, 0x8f6f58, 0x55602f], [mChair, 0x15120f, 0xb39256, 0x3a2a1c], [mGloss, 0x070707, 0xefe8da, 0xefe8da], [mPost, 0x2a211a, 0xb39256, 0xcbbd9c], [mGlass, 0xffffff, 0xffc27a, 0xffd9a0], [mSwag, 0xb89c78, 0xb89c78, 0xcfc2a2]];
+  var TH = { chairM: [0.1, 0.75, 0.15], chairR: [0.42, 0.35, 0.5], postM: [0.5, 0.8, 0.1], glossR: [0.2, 0.14, 0.14], glossE: [0.55, 0.9, 0.9], glass: [0.22, 0.38, 0.34], hemi: [0xffe6c8, 0xffd9a8, 0xffe2b8] };
+  function applyTheme(i){
+    themeI = i; themeB = i === 1; themeC = i === 2;
+    THEME.forEach(function(t){ t[0].color.setHex(t[1 + i]).convertSRGBToLinear(); });
+    mChair.metalness = TH.chairM[i]; mChair.roughness = TH.chairR[i]; mPost.metalness = TH.postM[i];
+    mGloss.roughness = TH.glossR[i]; mGloss.userData.env = TH.glossE[i]; mGlass.opacity = TH.glass[i];
+    gA.visible = i === 0; gB.visible = themeB; gC.visible = themeC;
+    var d = inst.fl, src = [d.c, d.c2, d.c3][i];
+    if (d.mesh) { for (var k = 0; k < src.length; k++) d.mesh.setColorAt(k, src[k]); d.mesh.instanceColor.needsUpdate = true; }
+    hemi.color.setHex(TH.hemi[i]);
+    if (themeC) { mWallDrape.emissive.setRGB(1, 1, 1); mDrape.emissive.setRGB(1, 1, 1); } else { mWallDrape.emissive.setRGB(1, 1, 1); mDrape.emissive.setRGB(1, 1, 1); }
+    mSwag.emissive.setHex(themeC ? 0xffc070 : 0xff9a3c).convertSRGBToLinear(); mSwag.emissiveIntensity = themeC ? 0.22 : 0.1;
+    lmApplied = -1; selTheme.value = String(i);
+  }
+  selTheme.addEventListener('change', function(){ applyTheme(parseInt(selTheme.value, 10) || 0); });
   var btnBright = document.getElementById('btnBright'), btnEntry = document.getElementById('btnEntry');
   function setLight(entry){ lmTarget = entry ? 1 : 0; btnBright.setAttribute('aria-pressed', entry ? 'false' : 'true'); btnEntry.setAttribute('aria-pressed', entry ? 'true' : 'false'); }
   btnBright.addEventListener('click', function(){ setLight(false); });
@@ -682,19 +794,21 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     var want = camera.position.y > 7.4 ? 1 : 0;
     cut += (want - cut) * Math.min(1, dt * 6);
     walls.scale.y = 1 - cut * 0.83;
-    tall.visible = cut < 0.5;
+    tall.visible = cut < 0.5; gBTall.visible = (themeB || themeC) && cut < 0.5; gCTall.visible = themeC && cut < 0.5;
     labels.visible = showLabels && cut > 0.5;
     scene.fog.density = 0.0045 * (1 - cut);
     lm += (lmTarget - lm) * Math.min(1, dt * 2.2);
     if (Math.abs(lm - lmTarget) < 0.002) lm = lmTarget;
     if (lm !== lmApplied) {
       lmApplied = lm;
-      for (var li = 0; li < LS.length; li++) LS[li][0].intensity = LS[li][1] + (LS[li][2] - LS[li][1]) * lm;
+      for (var li = 0; li < LS.length; li++) LS[li][0].intensity = (LS[li][1] + (LS[li][2] - LS[li][1]) * lm) * (themeC && LS[li][3] ? 0.6 : 1);
       for (var mi = 0; mi < MATS.length; mi++) MATS[mi].envMapIntensity = MATS[mi].userData.env * (1 - 0.85 * lm);
-      mLightStrip.color.copy(STRIPBASE).multiplyScalar(1 - 0.94 * lm);
-      mFix.color.copy(FIXBASE).multiplyScalar(1 - 0.97 * lm);
+      mLightStrip.color.copy(STRIPBASE).multiplyScalar((1 - 0.94 * lm) * (themeC ? 0.25 : 1));
+      mFix.color.copy(FIXBASE).multiplyScalar((1 - 0.97 * lm) * (themeC ? 0.25 : 1));
       mMural.emissiveIntensity = 0.28 - 0.16 * lm; mCrystal.emissiveIntensity = 0.9 - 0.5 * lm;
-      for (var bm = 0; bm < BEAMS.length; bm++) { BEAMS[bm].material.opacity = 0.13 * lm; BEAMS[bm].visible = lm > 0.01; }
+      mWallDrape.emissiveIntensity = (themeB ? 0.5 : themeC ? 0.38 : 0) * (1 - 0.5 * lm); mDrape.emissiveIntensity = (themeB ? 0.45 : themeC ? 0.42 : 0) * (1 - 0.4 * lm);
+      mShade.emissiveIntensity = 0.9 - 0.4 * lm;
+      var bo = Math.max(lm, themeC ? 0.5 : 0); for (var bm = 0; bm < BEAMS.length; bm++) { BEAMS[bm].material.opacity = 0.13 * bo; BEAMS[bm].visible = bo > 0.01; }
       renderer.toneMappingExposure = 1.25 - 0.1 * lm;
     }
     var fl = 0.86 + 0.09 * Math.sin(now * 0.009) + 0.05 * Math.sin(now * 0.023);
