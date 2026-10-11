@@ -494,7 +494,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     g.fillStyle = 'rgba(120,116,90,0.14)'; g.beginPath(); g.moveTo(0, h); g.quadraticCurveTo(w * 0.25, h * 0.62, w * 0.5, h * 0.8); g.quadraticCurveTo(w * 0.78, h * 0.62, w, h); g.fill();
   });
   var mMural = std(0xffffff, 0.9, 0, { map: muralTex, emissive: 0xffffff, emissiveMap: muralTex, emissiveIntensity: 0.28 });
-  (function(){ var m = new T.Mesh(arch(4.8, 4.7), mMural); m.position.set(23.5, 0.6, -19.62); m.receiveShadow = true; })();
+  (function(){ var m = new T.Mesh(arch(4.8, 4.7), mMural); m.position.set(23.5, 0.6, -19.52); m.receiveShadow = true; gA.add(m); })();
   /* olive theme backdrop after the reference: a burgundy drape framed by deep olive velvet */
   drape(gA, std(0x5a1424, 0.85, 0, { side: T.DoubleSide }), 19.6, 19.72, 27.4, 19.72, 0.6, 6.3);
   box(scene, mCloth, 22.4, 0.6, 17.6, 24.6, 1.38, 18.4);
