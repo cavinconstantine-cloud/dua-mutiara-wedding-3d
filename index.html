@@ -293,7 +293,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   var glowBig = [], glowSmall = [], glowC = [];
   var PAL = (function(){
     var c = function(h){ return new T.Color(h); }, b = BLOOM;
-    return [b.clone().multiplyScalar(0.7), c('#b5647a'), c('#c98a9c'), c('#f4f0e6'), c('#e6dcc4'), c('#6b6e3a'), c('#8f9a5a'), c('#5e6634'), c('#465028'), c('#8e4a62')].map(function(x){ return x.convertSRGBToLinear(); });
+    return [b.clone().multiplyScalar(0.7), b.clone(), b.clone().multiplyScalar(1.2), c('#f4f0e6'), c('#e6dcc4'), c('#6b6e3a'), c('#8f9a5a'), c('#5e6634'), c('#465028'), b.clone().multiplyScalar(0.5)].map(function(x){ return x.convertSRGBToLinear(); });
   })();
   /* drapery theme florals: dusty rust, dried rose, mauve and cream, as in the references */
   var PAL2 = ['#8a4a3a', '#6b3b2e', '#a8644a', '#b98a7a', '#8c5a5e', '#70484c', '#e6d8c0', '#6f7350', '#4a2024', '#c9a78c'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); }), ai = 0;
@@ -495,8 +495,8 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   });
   var mMural = std(0xffffff, 0.9, 0, { map: muralTex, emissive: 0xffffff, emissiveMap: muralTex, emissiveIntensity: 0.28 });
   (function(){ var m = new T.Mesh(arch(4.8, 4.7), mMural); m.position.set(23.5, 0.6, -19.62); m.receiveShadow = true; })();
-  /* olive theme backdrop after the reference: a dusty rose drape framed by deep olive velvet */
-  drape(gA, std(0x8a5266, 0.85, 0, { side: T.DoubleSide }), 19.6, 19.72, 27.4, 19.72, 0.6, 6.3);
+  /* olive theme backdrop after the reference: a burgundy drape framed by deep olive velvet */
+  drape(gA, std(0x5a1424, 0.85, 0, { side: T.DoubleSide }), 19.6, 19.72, 27.4, 19.72, 0.6, 6.3);
   box(scene, mCloth, 22.4, 0.6, 17.6, 24.6, 1.38, 18.4);
   chair(22.95, 18.85, 0, -1, 0.6); chair(24.05, 18.85, 0, -1, 0.6);
   mound(20.4, 0.6, 17.6, 1.6, 1.6, 0.85, 360); mound(26.6, 0.6, 17.6, 1.6, 1.6, 0.85, 360);
@@ -697,8 +697,8 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     var roseGeo = mergeGeo([cup(15, 1, 0, 0), cup(10, 0.62, 0.14, 0.63), cup(10, 0.32, 0.32, 0.2)]);
     var gg = new T.ConeGeometry(1, 1, 5); gg.translate(0, 0.5, 0);
     var GR = ['#5e7a34', '#7a9440', '#46602a'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); });
-    /* olive theme florals after the reference: dusty rose and mauve hydrangea, white orchids, deep greens, a touch of burgundy */
-    var PF = ['#b5647a', '#c98a9c', '#8e4a62', '#f4f0e6', '#f4f0e6', '#e8dcd0', '#5e6634', '#465028', '#7a8048', '#6e1423'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); });
+    /* olive theme florals after the reference: burgundy blooms, white orchids and deep greens */
+    var PF = ['#6e1423', '#8a1c2c', '#4a0e1a', '#f4f0e6', '#f4f0e6', '#e8dcd0', '#5e6634', '#465028', '#7a8048', '#6e1423'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); });
     function lush(tag, group, PE){
       def('fl' + tag, new T.IcosahedronGeometry(1, 1), mFlower, false, group); def('fb' + tag, roseGeo, mFlowerDS, false, group); def('gr' + tag, gg, mFlower, false, group);
       var kk = small ? 0.45 : 1;
