@@ -148,7 +148,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   scene.add(gA); scene.add(gB); scene.add(gBTall); gB.visible = false; gBTall.visible = false;
   var gC = new T.Group(), gCTall = new T.Group(); scene.add(gC); scene.add(gCTall); gC.visible = false; gCTall.visible = false;
   var gD = new T.Group(); scene.add(gD); gD.visible = false;
-  var gE = new T.Group(), gChand = new T.Group(); scene.add(gE); scene.add(gChand); gE.visible = false;
+  var gE = new T.Group(), gChand = new T.Group(), gF = new T.Group(); scene.add(gE); scene.add(gChand); scene.add(gF); gE.visible = false; gF.visible = false;
 
   function box(parent, mat, x0, y0, z0, x1, y1, z1, cast){
     var m = new T.Mesh(new T.BoxGeometry(Math.abs(x1 - x0), y1 - y0, Math.abs(z1 - z0)), mat);
@@ -293,7 +293,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   var glowBig = [], glowSmall = [], glowC = [];
   var PAL = (function(){
     var c = function(h){ return new T.Color(h); }, b = BLOOM;
-    return [b.clone().multiplyScalar(0.6), b.clone(), b.clone().multiplyScalar(1.2), c('#efe6d2'), c('#e6dcc4'), c('#6b6e3a'), c('#8f9a5a'), c('#5e6634'), c('#465028'), c('#7a8048')].map(function(x){ return x.convertSRGBToLinear(); });
+    return [b.clone().multiplyScalar(0.7), c('#b5647a'), c('#c98a9c'), c('#f4f0e6'), c('#e6dcc4'), c('#6b6e3a'), c('#8f9a5a'), c('#5e6634'), c('#465028'), c('#8e4a62')].map(function(x){ return x.convertSRGBToLinear(); });
   })();
   /* drapery theme florals: dusty rust, dried rose, mauve and cream, as in the references */
   var PAL2 = ['#8a4a3a', '#6b3b2e', '#a8644a', '#b98a7a', '#8c5a5e', '#70484c', '#e6d8c0', '#6f7350', '#4a2024', '#c9a78c'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); }), ai = 0;
@@ -494,7 +494,9 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     g.fillStyle = 'rgba(120,116,90,0.14)'; g.beginPath(); g.moveTo(0, h); g.quadraticCurveTo(w * 0.25, h * 0.62, w * 0.5, h * 0.8); g.quadraticCurveTo(w * 0.78, h * 0.62, w, h); g.fill();
   });
   var mMural = std(0xffffff, 0.9, 0, { map: muralTex, emissive: 0xffffff, emissiveMap: muralTex, emissiveIntensity: 0.28 });
-  (function(){ var m = new T.Mesh(arch(4.8, 4.7), mMural); m.position.set(23.5, 0.6, -19.62); m.receiveShadow = true; gA.add(m); })();
+  (function(){ var m = new T.Mesh(arch(4.8, 4.7), mMural); m.position.set(23.5, 0.6, -19.62); m.receiveShadow = true; })();
+  /* olive theme backdrop after the reference: a dusty rose drape framed by deep olive velvet */
+  drape(gA, std(0x8a5266, 0.85, 0, { side: T.DoubleSide }), 19.6, 19.72, 27.4, 19.72, 0.6, 6.3);
   box(scene, mCloth, 22.4, 0.6, 17.6, 24.6, 1.38, 18.4);
   chair(22.95, 18.85, 0, -1, 0.6); chair(24.05, 18.85, 0, -1, 0.6);
   mound(20.4, 0.6, 17.6, 1.6, 1.6, 0.85, 360); mound(26.6, 0.6, 17.6, 1.6, 1.6, 0.85, 360);
@@ -681,22 +683,45 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     var postGeo = new T.LatheGeometry(pts, 20);
     POSTS.forEach(function(p){ var m = new T.Mesh(postGeo, mDrape); m.position.set(p[0], 0, -p[1]); m.castShadow = true; gGaz.add(m); });
     /* lush florals with grasses */
-    def('flE', new T.IcosahedronGeometry(1, 1), mFlower, false, gE); def('fbE', bloomGeo, mFlowerDS, false, gE);
-    var gg = new T.ConeGeometry(1, 1, 5); gg.translate(0, 0.5, 0); def('grass', gg, mFlower, false, gE);
-    var PE = PAL5, GR = ['#5e7a34', '#7a9440', '#46602a'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); });
-    function moundE(cx, y0, cz, rx, h, rz, n){
-      for (var i = 0; i < n; i++) {
-        var u = rnd() * 2 - 1, w = rnd() * 2 - 1, d = u * u + w * w; if (d > 1) { var k = rnd() / Math.sqrt(d); u *= k; w *= k; }
-        var t = 1 - (u * u + w * w), y = y0 + 0.05 + h * t * (0.25 + 0.75 * rnd()), s = 0.045 + 0.06 * rnd(), col = PE[(rnd() * PE.length) | 0].clone().multiplyScalar(0.6 + 0.5 * rnd());
-        if (rnd() < 0.6) put('fbE', MT(cx + u * rx, y, cz + w * rz, (rnd() - 0.5) * 1.5, rnd() * 6, (rnd() - 0.5) * 1.5, s * 1.3, s * 1.3, s * 1.3), col);
-        else put('flE', M(cx + u * rx, y, cz + w * rz, rnd() * 6, s, s * 0.8, s), col);
-      }
-      for (var b = 0; b < Math.round(n / 14); b++) put('grass', MT(cx + (rnd() * 2 - 1) * rx, y0, cz + (rnd() * 2 - 1) * rz, (rnd() - 0.5) * 0.7, rnd() * 6, (rnd() - 0.5) * 0.7, 0.009, h * (0.5 + rnd() * 0.6), 0.009), GR[(rnd() * 3) | 0].clone().multiplyScalar(0.7 + 0.5 * rnd()));
+    /* a layered rose: three nested petal cups merged into one mesh, so close-up flowers read as real blooms */
+    function cup(seg, scale, lift, twist){
+      var g = new T.LatheGeometry([new T.Vector2(0.02, 0.1), new T.Vector2(0.4, 0.16), new T.Vector2(0.8, 0.4), new T.Vector2(1.0, 0.78)], seg), p = g.attributes.position;
+      for (var i = 0; i < p.count; i++) { var x = p.getX(i), z = p.getZ(i), r = Math.hypot(x, z), a = Math.atan2(x, z) + twist, k = (1 + 0.2 * r * Math.sin(a * 5)) * scale; p.setX(i, x * k); p.setZ(i, z * k); p.setY(i, (p.getY(i) + 0.12 * r * Math.cos(a * 5)) * scale + lift); }
+      g.computeVertexNormals(); return g;
     }
-    POSTS.forEach(function(p, i){ var side = (i === 0 || i === 3); moundE(p[0] + p[2] * 0.35, 0, p[1] + p[3] * 0.35, side ? 0.95 : 0.62, side ? 1.5 : 1.2, side ? 0.95 : 0.62, side ? 420 : 260); });
-    [25.2, 28, 31, 34, 37].forEach(function(x){ moundE(x, 0, 2.85, 0.85, 1.05, 0.42, 260); });
-    [27, 30, 33, 36].forEach(function(x){ moundE(x, 0, 6.08, 0.95, 0.9, 0.3, 230); });
-    moundE(41.0, 0, 3.2, 0.5, 1.1, 0.9, 200); moundE(37.2, 0, 1.4, 0.5, 1.0, 0.7, 180);
+    function mergeGeo(list){
+      var pos = [], nor = [], uv = [], idx = [], off = 0;
+      list.forEach(function(g){ var p = g.attributes.position.array, n = g.attributes.normal.array, u = g.attributes.uv.array, ix = g.index.array, i; for (i = 0; i < p.length; i++) { pos.push(p[i]); nor.push(n[i]); } for (i = 0; i < u.length; i++) uv.push(u[i]); for (i = 0; i < ix.length; i++) idx.push(ix[i] + off); off += p.length / 3; });
+      var o = new T.BufferGeometry(); o.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); o.setAttribute('normal', new T.Float32BufferAttribute(nor, 3)); o.setAttribute('uv', new T.Float32BufferAttribute(uv, 2)); o.setIndex(idx); return o;
+    }
+    var roseGeo = mergeGeo([cup(15, 1, 0, 0), cup(10, 0.62, 0.14, 0.63), cup(10, 0.32, 0.32, 0.2)]);
+    var gg = new T.ConeGeometry(1, 1, 5); gg.translate(0, 0.5, 0);
+    var GR = ['#5e7a34', '#7a9440', '#46602a'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); });
+    /* olive theme florals after the reference: dusty rose and mauve hydrangea, white orchids, deep greens, a touch of burgundy */
+    var PF = ['#b5647a', '#c98a9c', '#8e4a62', '#f4f0e6', '#f4f0e6', '#e8dcd0', '#5e6634', '#465028', '#7a8048', '#6e1423'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); });
+    function lush(tag, group, PE){
+      def('fl' + tag, new T.IcosahedronGeometry(1, 1), mFlower, false, group); def('fb' + tag, roseGeo, mFlowerDS, false, group); def('gr' + tag, gg, mFlower, false, group);
+      var kk = small ? 0.45 : 1;
+      function md(cx, y0, cz, rx, h, rz, n){
+        n = Math.round(n * kk);
+        for (var i = 0; i < n; i++) {
+          var u = rnd() * 2 - 1, w = rnd() * 2 - 1, d = u * u + w * w; if (d > 1) { var k = rnd() / Math.sqrt(d); u *= k; w *= k; }
+          var t = 1 - (u * u + w * w), y = y0 + 0.05 + h * t * (0.25 + 0.75 * rnd()), s = 0.045 + 0.06 * rnd(), col = PE[(rnd() * PE.length) | 0].clone().multiplyScalar(0.6 + 0.5 * rnd());
+          if (rnd() < 0.62) put('fb' + tag, MT(cx + u * rx, y, cz + w * rz, (rnd() - 0.5) * 1.5, rnd() * 6, (rnd() - 0.5) * 1.5, s * 1.35, s * 1.35, s * 1.35), col);
+          else put('fl' + tag, M(cx + u * rx, y, cz + w * rz, rnd() * 6, s, s * 0.8, s), col);
+        }
+        for (var b = 0; b < Math.round(n / 14); b++) put('gr' + tag, MT(cx + (rnd() * 2 - 1) * rx, y0, cz + (rnd() * 2 - 1) * rz, (rnd() - 0.5) * 0.7, rnd() * 6, (rnd() - 0.5) * 0.7, 0.009, h * (0.5 + rnd() * 0.6), 0.009), GR[(rnd() * 3) | 0].clone().multiplyScalar(0.7 + 0.5 * rnd()));
+      }
+      POSTS.forEach(function(p, i){ var side = (i === 0 || i === 3); md(p[0] + p[2] * 0.35, 0, p[1] + p[3] * 0.35, side ? 1.0 : 0.62, side ? 1.6 : 1.25, side ? 1.0 : 0.62, side ? 460 : 280); });
+      /* a continuous hedge of flowers down both sides of the catwalk */
+      for (var x = 25.0; x <= 37.6; x += 1.4) md(x, 0, 2.85, 0.8, 0.75 + 0.5 * rnd(), 0.42, 230);
+      for (var x2 = 26.3; x2 <= 37.4; x2 += 1.4) md(x2, 0, 6.08, 0.8, 0.6 + 0.4 * rnd(), 0.3, 190);
+      md(41.0, 0, 3.2, 0.5, 1.1, 0.9, 220); md(37.2, 0, 1.4, 0.5, 1.0, 0.7, 200); md(40.9, 0, 0.9, 0.45, 0.9, 0.6, 160);
+      /* around the gazebo, leaving the walk to the pelaminan open */
+      [20, 40, 140, 160, 200, 220, 320, 340].forEach(function(deg){ var a = deg * Math.PI / 180; md(CXC + (CR + 0.55) * Math.cos(a), 0, CZC + (CR + 0.55) * Math.sin(a), 0.6, 0.7, 0.6, 150); });
+      md(18.6, 0, 15.6, 1.1, 1.2, 0.45, 300); md(28.4, 0, 15.6, 1.1, 1.2, 0.45, 300);
+    }
+    lush('E', gE, PAL5); lush('F', gF, PF);
   })();
   /* true mirror reflections for the glossy black dance floor and catwalk (large screens, dark-floor themes only) */
   var mirrors = [];
@@ -818,14 +843,14 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   btnLabels.addEventListener('click', function(){ showLabels = !showLabels; btnLabels.setAttribute('aria-pressed', showLabels ? 'true' : 'false'); });
   /* decor theme switch: recolours shared fabric, floors, chairs and flowers, and shows each theme's own pieces */
   var themeI = 0, themeB = false, themeC = false, themeD = false, themeE = false, selTheme = document.getElementById('selTheme');
-  var THEME = [[mWallDrape, 0x4f5232, 0x9c8160, 0xb3a586, 0xcdb89a, 0x0c0b0b], [mDrape, 0x5a5c3a, 0xa98c68, 0xbcae8e, 0x4a1028, 0x3a1218], [mBurg, 0x55582f, 0xb89c78, 0xcbbd9c, 0xcdb89a, 0x4a1420], [mCloth, CLOTH.getHex(), 0xb39c7c, 0xc2b494, 0x2c4124, 0xcdb89a], [mRunner, 0x6e1423, 0x8f6f58, 0x55602f, 0x5a1230, 0x5a1230], [mChair, 0x15120f, 0xb39256, 0x3a2a1c, 0x3a1a12, 0x15120f], [mGloss, 0x070707, 0xefe8da, 0xefe8da, 0x4a1028, 0x050505], [mPost, 0x2a211a, 0xb39256, 0xcbbd9c, 0x5a4632, 0x1a1010], [mGlass, 0xffffff, 0xffc27a, 0xffd9a0, 0xffc27a, 0xffc27a], [mSwag, 0xb89c78, 0xb89c78, 0xcfc2a2, 0xcdb89a, 0x4a1420], [mCush, 0xe9e1d0, 0xe9e1d0, 0xe9e1d0, 0xcdb89a, 0xe9e1d0], [mDance, 0x070707, 0xefe8da, 0xefe8da, 0xcdb89a, 0x040404], [mDance2, 0x070707, 0xefe8da, 0xefe8da, 0x5a4632, 0x040404], [mIvory, 0xf2ead8, 0xf2ead8, 0xf2ead8, 0x9a7650, 0xf2ead8], [mPelmet, 0x55582f, 0x4a1420, 0x4a1420, 0x4a1420, 0x4a1420], [mWallDrape2, 0x141312, 0x9c8160, 0xb3a586, 0xcdb89a, 0x0c0b0b]];
+  var THEME = [[mWallDrape, 0x3f4429, 0x9c8160, 0xb3a586, 0xcdb89a, 0x0c0b0b], [mDrape, 0x454a2b, 0xa98c68, 0xbcae8e, 0x4a1028, 0x3a1218], [mBurg, 0x444a2a, 0xb89c78, 0xcbbd9c, 0xcdb89a, 0x4a1420], [mCloth, CLOTH.getHex(), 0xb39c7c, 0xc2b494, 0x2c4124, 0xcdb89a], [mRunner, 0x6e1423, 0x8f6f58, 0x55602f, 0x5a1230, 0x5a1230], [mChair, 0x15120f, 0xb39256, 0x3a2a1c, 0x3a1a12, 0x15120f], [mGloss, 0x070707, 0xefe8da, 0xefe8da, 0x4a1028, 0x050505], [mPost, 0x2a211a, 0xb39256, 0xcbbd9c, 0x5a4632, 0x1a1010], [mGlass, 0xffffff, 0xffc27a, 0xffd9a0, 0xffc27a, 0xffc27a], [mSwag, 0x444a2a, 0xb89c78, 0xcfc2a2, 0xcdb89a, 0x4a1420], [mCush, 0xe9e1d0, 0xe9e1d0, 0xe9e1d0, 0xcdb89a, 0xe9e1d0], [mDance, 0x070707, 0xefe8da, 0xefe8da, 0xcdb89a, 0x040404], [mDance2, 0x070707, 0xefe8da, 0xefe8da, 0x5a4632, 0x040404], [mIvory, 0xf2ead8, 0xf2ead8, 0xf2ead8, 0x9a7650, 0xf2ead8], [mPelmet, 0x444a2a, 0x4a1420, 0x4a1420, 0x4a1420, 0x4a1420], [mWallDrape2, 0x141312, 0x9c8160, 0xb3a586, 0xcdb89a, 0x0c0b0b]];
   var TH = { chairM: [0.1, 0.75, 0.15, 0.2, 0.1], chairR: [0.42, 0.35, 0.5, 0.25, 0.42], postM: [0.5, 0.8, 0.1, 0.85, 0.3], glossR: [0.2, 0.14, 0.14, 0.2, 0.08], glossE: [0.55, 0.9, 0.9, 0.45, 0.4], glass: [0.22, 0.38, 0.34, 0.34, 0.34], hemi: [0xffe6c8, 0xffd9a8, 0xffe2b8, 0xffe0bc, 0xffdcc0] };
   function applyTheme(i){
     themeI = i; themeB = i === 1; themeC = i === 2; themeD = i === 3; themeE = i === 4;
     THEME.forEach(function(t){ t[0].color.setHex(t[1 + i]).convertSRGBToLinear(); });
     mChair.metalness = TH.chairM[i]; mChair.roughness = TH.chairR[i]; mPost.metalness = TH.postM[i];
     mGloss.roughness = TH.glossR[i]; mGloss.userData.env = TH.glossE[i]; mDance.roughness = [0.2, 0.14, 0.14, 0.3, 0.08][i]; mDance.userData.env = [0.55, 0.9, 0.9, 0.5, 0.4][i]; mDance2.roughness = [0.2, 0.14, 0.14, 0.35, 0.12][i]; mDance2.metalness = themeD ? 0.7 : 0; mDance2.userData.env = [0.55, 0.9, 0.9, 0.8, 0.4][i]; mGlass.opacity = TH.glass[i];
-    gA.visible = i === 0; gB.visible = themeB; gC.visible = themeC; gD.visible = themeD; mIvory.metalness = themeD ? 0.6 : 0; gE.visible = themeE; var gz = (i === 0 || themeE); gGaz.visible = gz; gChand.visible = !gz; if (canopyValance) canopyValance.visible = !gz; mirrors.forEach(function(r){ r.visible = (i === 0 || themeE); });
+    gA.visible = i === 0; gB.visible = themeB; gC.visible = themeC; gD.visible = themeD; mIvory.metalness = themeD ? 0.6 : 0; gE.visible = themeE; gF.visible = i === 0; var gz = (i === 0 || themeE); gGaz.visible = gz; gChand.visible = !gz; if (canopyValance) canopyValance.visible = !gz; mirrors.forEach(function(r){ r.visible = (i === 0 || themeE); });
     ['fl', 'fb'].forEach(function(key){
       var d = inst[key], src = [d.c, d.c2, d.c3, d.c4, d.c5][i];
       if (d.mesh) { for (var k = 0; k < src.length; k++) d.mesh.setColorAt(k, src[k]); d.mesh.instanceColor.needsUpdate = true; }
@@ -993,7 +1018,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     var nearWant = camera.position.y > 7.4 ? 2 : 0.1; if (camera.near !== nearWant) { camera.near = nearWant; camera.updateProjectionMatrix(); }
     cut += (want - cut) * Math.min(1, dt * 6);
     walls.scale.y = 1 - cut * 0.83;
-    tall.visible = cut < 0.5; gBTall.visible = (themeB || themeC || themeD || themeE) && cut < 0.5; gCTall.visible = themeC && cut < 0.5;
+    tall.visible = cut < 0.5; gBTall.visible = (themeI === 0 || themeB || themeC || themeD || themeE) && cut < 0.5; gCTall.visible = themeC && cut < 0.5;
     labels.visible = showLabels && cut > 0.5;
     scene.fog.density = 0.0045 * (1 - cut);
     lm += (lmTarget - lm) * Math.min(1, dt * 2.2);
