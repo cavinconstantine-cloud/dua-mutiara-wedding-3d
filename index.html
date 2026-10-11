@@ -256,7 +256,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   def('lily', bloomGeo, mFlowerDS, false, gD);
   var mBronze = std(0x5a4632, 0.35, 0.85);
   /* paper lanterns for Sasa's reference: hanging globes, floor globes and oblong table lanterns */
-  var mLantern = std(0xf3e6c8, 0.9, 0, { emissive: 0xffd9a0, emissiveIntensity: 0.95 }), sphereGeo = new T.SphereGeometry(1, 24, 16), glowD = [];
+  var mLantern = std(0xe6d2ae, 0.9, 0, { emissive: 0xffd9a0, emissiveIntensity: 0.95 }), sphereGeo = new T.SphereGeometry(1, 24, 16), glowD = [];
   function globe(x, y, z, r, sy){ var m = new T.Mesh(sphereGeo, mLantern); m.scale.set(r, r * (sy || 1), r); m.position.set(x, y, -z); gD.add(m); glowD.push(x, y, -z); }
   function lantern(x, z){
     cyl(gD, mBronze, x, z, 0.014, 0.76, 1.6, 6, false); globe(x, 1.95, z, 0.19, 1.9);
@@ -303,8 +303,8 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     }
   }
   /* tall foliage centrepiece on a slim gold stem, for the ivory garden theme */
-  /* Sasa's reference: about 60% crisp white, with crimson, moss, sage, champagne, tortoiseshell and bronze as accents */
-  var PAL4 = ['#5a1230', '#6e1a3a', '#f1efe9', '#f1efe9', '#f1efe9', '#e6dcc6', '#3f5a2a', '#8f9c78', '#3a1a12', '#cdb89a'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); });
+  /* Sasa's reference: about 60% champagne beige, with crimson, moss, sage, champagne, tortoiseshell and bronze as accents */
+  var PAL4 = ['#5a1230', '#6e1a3a', '#cdb89a', '#d9c7aa', '#e0cfb2', '#c4ad8c', '#3f5a2a', '#8f9c78', '#3a1a12', '#cdb89a'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); });
   var LEAF = ['#56602f', '#3d4a26', '#6f7d3c', '#8a9a50'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); }), LEAFW = new T.Color('#f4eedd').convertSRGBToLinear();
   function tree(x, z){
     cyl(gC, mGold, x, z, 0.022, 0.76, 2.35, 6, false);
@@ -621,7 +621,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
       globe(h[0], h[1], h[2], h[3]); cyl(gD, mBronze, h[0], h[2], 0.006, h[1] + h[3], 6.6, 4, false);
     });
     [[18.9, 1.1, 17.2, 0.5], [19.9, 0.92, 16.8, 0.32], [28.1, 1.1, 17.2, 0.5], [27.1, 0.92, 16.8, 0.32], [25.4, 0.3, 2.5, 0.3], [28.4, 0.24, 2.6, 0.24], [31.4, 0.3, 2.5, 0.3], [34.4, 0.24, 2.6, 0.24], [12.6, 0.4, -7.2, 0.4], [12.9, 0.28, -2.0, 0.28], [12.2, 2.4, -4.6, 0.36]].forEach(function(f){ globe(f[0], f[1], f[2], f[3]); });
-    var W = new T.Color('#f4f1ea').convertSRGBToLinear(), G = new T.Color('#3f5a2a').convertSRGBToLinear();
+    var W = new T.Color('#dccbb0').convertSRGBToLinear(), G = new T.Color('#3f5a2a').convertSRGBToLinear();
     [[21.0, 15.2, 0, 1.9], [26.0, 15.2, 0, 1.9], [37.4, 3.0, 0, 1.8], [40.7, 6.3, 0, 1.8], [36.4, -3.9, 0, 1.6]].forEach(function(q){
       var x = q[0], z = q[1], y0 = q[2], yTop = q[3];
       cyl(gD, mBronze, x, z, 0.03, y0, yTop, 8, false); cyl(gD, mBronze, x, z, 0.17, y0, y0 + 0.03, 20, false);
@@ -751,7 +751,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   btnLabels.addEventListener('click', function(){ showLabels = !showLabels; btnLabels.setAttribute('aria-pressed', showLabels ? 'true' : 'false'); });
   /* decor theme switch: recolours shared fabric, floors, chairs and flowers, and shows each theme's own pieces */
   var themeI = 0, themeB = false, themeC = false, themeD = false, selTheme = document.getElementById('selTheme');
-  var THEME = [[mWallDrape, 0x161514, 0x9c8160, 0xb3a586, 0xdcd8cf], [mDrape, 0x5a5c3a, 0xa98c68, 0xbcae8e, 0x4a1028], [mBurg, 0x6e1423, 0xb89c78, 0xcbbd9c, 0x8f9c78], [mCloth, CLOTH.getHex(), 0xb39c7c, 0xc2b494, 0xe9e5dc], [mRunner, 0x6e1423, 0x8f6f58, 0x55602f, 0x5a1230], [mChair, 0x15120f, 0xb39256, 0x3a2a1c, 0x3a1a12], [mGloss, 0x070707, 0xefe8da, 0xefe8da, 0xf1efe9], [mPost, 0x2a211a, 0xb39256, 0xcbbd9c, 0x5a4632], [mGlass, 0xffffff, 0xffc27a, 0xffd9a0, 0xffc27a], [mSwag, 0xb89c78, 0xb89c78, 0xcfc2a2, 0xcdb89a], [mCush, 0xe9e1d0, 0xe9e1d0, 0xe9e1d0, 0x3f5a2a], [mIvory, 0xf2ead8, 0xf2ead8, 0xf2ead8, 0x9a7650]];
+  var THEME = [[mWallDrape, 0x161514, 0x9c8160, 0xb3a586, 0xcdb89a], [mDrape, 0x5a5c3a, 0xa98c68, 0xbcae8e, 0x4a1028], [mBurg, 0x6e1423, 0xb89c78, 0xcbbd9c, 0x8f9c78], [mCloth, CLOTH.getHex(), 0xb39c7c, 0xc2b494, 0xd2bea0], [mRunner, 0x6e1423, 0x8f6f58, 0x55602f, 0x5a1230], [mChair, 0x15120f, 0xb39256, 0x3a2a1c, 0x3a1a12], [mGloss, 0x070707, 0xefe8da, 0xefe8da, 0xd8c6a8], [mPost, 0x2a211a, 0xb39256, 0xcbbd9c, 0x5a4632], [mGlass, 0xffffff, 0xffc27a, 0xffd9a0, 0xffc27a], [mSwag, 0xb89c78, 0xb89c78, 0xcfc2a2, 0xcdb89a], [mCush, 0xe9e1d0, 0xe9e1d0, 0xe9e1d0, 0x3f5a2a], [mIvory, 0xf2ead8, 0xf2ead8, 0xf2ead8, 0x9a7650]];
   var TH = { chairM: [0.1, 0.75, 0.15, 0.2], chairR: [0.42, 0.35, 0.5, 0.25], postM: [0.5, 0.8, 0.1, 0.85], glossR: [0.2, 0.14, 0.14, 0.14], glossE: [0.55, 0.9, 0.9, 0.9], glass: [0.22, 0.38, 0.34, 0.34], hemi: [0xffe6c8, 0xffd9a8, 0xffe2b8, 0xffe0bc] };
   function applyTheme(i){
     themeI = i; themeB = i === 1; themeC = i === 2; themeD = i === 3;
