@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="id">
+<meta charset="utf-8">
+<title>Dua Mutiara Wedding 3D</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@500;600;700&display=swap">
+<style>
+/* Layout: full-bleed 3D room; quiet title top-left; a rail of viewpoints along the bottom; walk pad bottom-right. */
+:root{
+  --ink:#0d0a09; --panel:rgba(22,16,14,.8); --line:rgba(239,230,216,.36);
+  --cream:#efe6d8; --muted:#d3c5ae; --bloom:#8e1f33; --olive:#6b6535;
+  --display:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+  --ui:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--ink);color:var(--cream);font-family:var(--ui);overflow:hidden}
+#stage{position:fixed;inset:0;background:var(--ink)}
+#stage canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+#stage canvas:active{cursor:grabbing}
+.head{position:fixed;left:0;top:0;padding:calc(env(safe-area-inset-top,0px) + 18px) 20px 0;pointer-events:none;display:flex;flex-direction:column;gap:4px;max-width:min(92vw,560px)}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--muted);text-shadow:0 1px 8px rgba(0,0,0,.8)}
+h1{margin:0;font-family:var(--display);font-weight:600;font-size:clamp(26px,4.2vw,40px);line-height:1.05;text-wrap:balance;text-shadow:0 2px 16px rgba(0,0,0,.75)}
+.hint{font-size:12px;font-weight:600;color:var(--muted);text-shadow:0 1px 8px rgba(0,0,0,.85)}
+.dock{position:fixed;left:0;right:0;bottom:0;padding:0 16px calc(env(safe-area-inset-bottom,0px) + 14px);display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;pointer-events:auto}
+.rail{display:flex;gap:8px;overflow-x:auto;pointer-events:auto;padding-bottom:2px;scrollbar-width:none}
+.rail::-webkit-scrollbar{display:none}
+button{font-family:var(--ui);font-size:14px;font-weight:600;color:var(--cream);background:var(--panel);border:1px solid var(--line);border-radius:22px;min-height:44px;padding:0 16px;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:2px solid var(--cream);outline-offset:2px}
+button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:var(--cream)}
+.pad{display:grid;grid-template-columns:repeat(3,46px);grid-template-rows:repeat(2,46px);gap:6px;pointer-events:auto;flex:none}
+.pad button{padding:0;min-height:0;width:46px;height:46px;border-radius:23px;display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none}
+.pad .up{grid-column:2;grid-row:1}.pad .lf{grid-column:1;grid-row:2}.pad .dn{grid-column:2;grid-row:2}.pad .rt{grid-column:3;grid-row:2}
+.fail{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-size:16px;line-height:1.5;background:var(--ink)}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+
+<div id="stage" role="img" aria-label="Ruang 3D Dua Mutiara Ballroom dengan dekorasi wedding: pelaminan, dance floor, meja tamu, catwalk dan foyer"></div>
+<div class="head">
+  <div class="eyebrow">JW MARRIOTT JAKARTA · DUA MUTIARA BALLROOM 45 × 20 × 7 M</div>
+  <h1 id="viewName">Denah 3D</h1>
+  <div class="hint" id="hint">Geser untuk memutar · cubit atau scroll untuk zoom</div>
+</div>
+<div class="dock">
+  <div class="row">
+    <div class="tools">
+      <button type="button" id="btnBright" aria-pressed="true">Lampu terang</button>
+      <button type="button" id="btnEntry" aria-pressed="false">Lampu entry</button>
+      <button type="button" id="btnLabels" aria-pressed="true">Nomor meja</button>
+      <button type="button" id="btnTour" aria-pressed="false">Tur otomatis</button>
+    </div>
+    <div class="pad" aria-label="Kontrol gerak">
+      <button type="button" class="up" data-k="f" aria-label="Maju"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 10 6.5l6 6"></path></svg></button>
+      <button type="button" class="lf" data-k="l" aria-label="Putar ke kiri"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 4 6.5 10l6 6"></path></svg></button>
+      <button type="button" class="dn" data-k="b" aria-label="Mundur"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5 10 13.5l6-6"></path></svg></button>
+      <button type="button" class="rt" data-k="r" aria-label="Putar ke kanan"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 4l6 6-6 6"></path></svg></button>
+    </div>
+  </div>
+  <div class="rail" id="rail" aria-label="Sudut pandang"></div>
+</div>
+<div class="fail" id="fail" hidden>Perangkat atau browser ini tidak bisa menampilkan 3D. Coba buka di Chrome atau Safari versi terbaru.</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  var T = window.THREE, stage = document.getElementById('stage');
+  function fail(){ document.getElementById('fail').hidden = false; }
+  if (!T) { fail(); return; }
+  var renderer;
+  try { renderer = new T.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' }); } catch (e) { fail(); return; }
+  var small = Math.min(window.innerWidth, window.innerHeight) < 700;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.5 : 2));
+  renderer.outputEncoding = T.sRGBEncoding;
+  renderer.toneMapping = T.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.25;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = T.PCFSoftShadowMap;
+  stage.appendChild(renderer.domElement);
+  var canvas = renderer.domElement;
+
+  var scene = new T.Scene();
+  scene.background = new T.Color(0x0b0807);
+  scene.fog = new T.FogExp2(0x0b0807, 0.0045);
+  var camera = new T.PerspectiveCamera(60, 1, 0.1, 400);
+
+  /* soft warm environment for reflections on glossy floors, glass and gold */
+  (function(){
+    var es = new T.Scene();
+    es.add(new T.Mesh(new T.BoxGeometry(60, 20, 60), new T.MeshBasicMaterial({ color: 0x241a14, side: T.BackSide })));
+    var lm = new T.MeshBasicMaterial({ color: 0xffd9a8 });
+    [[0, 9.5, 0, 30, 0.5, 12], [-22, 4, 0, 0.5, 3, 22], [22, 4, 0, 0.5, 3, 22], [0, 3, -28, 14, 6, 0.5], [0, 2, 28, 10, 3, 0.5]].forEach(function(a){
+      var b = new T.Mesh(new T.BoxGeometry(a[3], a[4], a[5]), lm); b.position.set(a[0], a[1], a[2]); es.add(b);
+    });
+    var pm = new T.PMREMGenerator(renderer);
+    scene.environment = pm.fromScene(es, 0.04).texture;
+    pm.dispose();
+  })();
+
+  /* ---------- helpers. All layout numbers are in venue metres: x along the 45 m wall, z from the foyer wall (0) to the back wall (20), foyer at negative z. ---------- */
+  var seed = 7;
+  function rnd(){ seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }
+  function canvasTex(w, h, draw, rep){
+    var c = document.createElement('canvas'); c.width = w; c.height = h;
+    draw(c.getContext('2d'), w, h);
+    var t = new T.CanvasTexture(c); t.encoding = T.sRGBEncoding; t.anisotropy = 4;
+    if (rep) { t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(rep[0], rep[1]); }
+    return t;
+  }
+  function std(color, rough, metal, extra){
+    var o = { color: new T.Color(color).convertSRGBToLinear(), roughness: rough, metalness: metal || 0 };
+    if (extra) for (var k in extra) o[k] = extra[k];
+    if (typeof o.emissive === 'number') o.emissive = new T.Color(o.emissive).convertSRGBToLinear();
+    var mm = new T.MeshStandardMaterial(o);
+    mm.userData.env = mm.envMapIntensity; MATS.push(mm);
+    return mm;
+  }
+  var MATS = [];
+  var walls = new T.Group(), tall = new T.Group(), labels = new T.Group();
+  scene.add(walls); scene.add(tall); scene.add(labels);
+
+  function box(parent, mat, x0, y0, z0, x1, y1, z1, cast){
+    var m = new T.Mesh(new T.BoxGeometry(Math.abs(x1 - x0), y1 - y0, Math.abs(z1 - z0)), mat);
+    m.position.set((x0 + x1) / 2, (y0 + y1) / 2, -(z0 + z1) / 2);
+    m.castShadow = cast !== false; m.receiveShadow = true; parent.add(m); return m;
+  }
+  function cyl(parent, mat, x, z, r, y0, y1, seg, cast){
+    var m = new T.Mesh(new T.CylinderGeometry(r, r, y1 - y0, seg || 24), mat);
+    m.position.set(x, (y0 + y1) / 2, -z); m.castShadow = cast !== false; m.receiveShadow = true; parent.add(m); return m;
+  }
+  function wallSeg(x0, z0, x1, z1, h, mat){
+    var len = Math.hypot(x1 - x0, z1 - z0);
+    var m = new T.Mesh(new T.BoxGeometry(len, h, 0.24), mat);
+    m.position.set((x0 + x1) / 2, h / 2, -(z0 + z1) / 2);
+    m.rotation.y = Math.atan2(z1 - z0, x1 - x0);
+    m.receiveShadow = true; walls.add(m); return m;
+  }
+  function drape(parent, mat, x0, z0, x1, z1, y0, y1){
+    var len = Math.hypot(x1 - x0, z1 - z0);
+    var g = new T.PlaneGeometry(len, y1 - y0, Math.max(8, Math.round(len * 14)), 1);
+    var p = g.attributes.position;
+    for (var i = 0; i < p.count; i++) { var u = p.getX(i); p.setZ(i, 0.07 * Math.sin(u * 15) + 0.02 * Math.sin(u * 41)); }
+    g.computeVertexNormals();
+    var m = new T.Mesh(g, mat);
+    m.position.set((x0 + x1) / 2, (y0 + y1) / 2, -(z0 + z1) / 2);
+    m.rotation.y = Math.atan2(z1 - z0, x1 - x0);
+    m.castShadow = true; m.receiveShadow = true; parent.add(m); return m;
+  }
+  /* instancing collector */
+  var inst = {};
+  function def(key, geo, mat, cast, parent){ inst[key] = { geo: geo, mat: mat, m: [], c: [], cast: cast !== false, parent: parent || scene }; }
+  var _q = new T.Quaternion(), _e = new T.Euler(), _p = new T.Vector3(), _s = new T.Vector3();
+  function M(x, y, z, ry, sx, sy, sz){
+    _e.set(0, ry || 0, 0); _q.setFromEuler(_e); _p.set(x, y, -z); _s.set(sx, sy, sz);
+    return new T.Matrix4().compose(_p, _q, _s);
+  }
+  function L(lx, ly, lz, sx, sy, sz){
+    _q.set(0, 0, 0, 1); _p.set(lx, ly, lz); _s.set(sx, sy, sz);
+    return new T.Matrix4().compose(_p, _q, _s);
+  }
+  function put(key, mat, color){ inst[key].m.push(mat); if (color) inst[key].c.push(color); }
+  function flush(){
+    for (var k in inst) {
+      var d = inst[k]; if (!d.m.length) continue;
+      var im = new T.InstancedMesh(d.geo, d.mat, d.m.length);
+      for (var i = 0; i < d.m.length; i++) { im.setMatrixAt(i, d.m[i]); if (d.c.length) im.setColorAt(i, d.c[i]); }
+      im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true;
+      im.castShadow = d.cast; im.receiveShadow = true; im.frustumCulled = false; d.parent.add(im);
+    }
+  }
+
+  /* ---------- materials ---------- */
+  var BLOOM = new T.Color('#7A1628'), CLOTH = new T.Color('#6B6535');
+  var mCarpet = std(0xb4a69e, 0.92, 0, { map: canvasTex(512, 512, function(g, w, h){
+    /* hotel carpet from the ballroom photo: terracotta red ground, cream and gold floral lattice */
+    g.fillStyle = '#74301f'; g.fillRect(0, 0, w, h);
+    for (var i = 0; i < 5000; i++) { g.fillStyle = 'rgba(' + (90 + rnd() * 70 | 0) + ',' + (30 + rnd() * 34 | 0) + ',' + (18 + rnd() * 24 | 0) + ',0.5)'; g.fillRect(rnd() * w, rnd() * h, 2, 2); }
+    for (var f = 0; f < 260; f++) { g.fillStyle = 'rgba(226,198,140,' + (0.25 + rnd() * 0.35) + ')'; g.beginPath(); g.arc(rnd() * w, rnd() * h, 2 + rnd() * 4, 0, 6.2832); g.fill(); }
+    g.strokeStyle = 'rgba(92,30,20,0.7)'; g.lineWidth = 6; g.strokeRect(0, 0, w, h); g.strokeRect(0, 0, w / 2, h / 2); g.strokeRect(w / 2, h / 2, w / 2, h / 2);
+    g.strokeStyle = 'rgba(220,188,128,0.6)'; g.lineWidth = 3;
+    for (var a = 0; a < 2; a++) for (var b = 0; b < 2; b++) {
+      var cx = a * 256 + 128, cy = b * 256 + 128;
+      g.beginPath(); g.moveTo(cx, cy - 104); g.quadraticCurveTo(cx + 44, cy - 44, cx + 104, cy); g.quadraticCurveTo(cx + 44, cy + 44, cx, cy + 104); g.quadraticCurveTo(cx - 44, cy + 44, cx - 104, cy); g.quadraticCurveTo(cx - 44, cy - 44, cx, cy - 104); g.stroke();
+      g.beginPath(); g.arc(cx, cy, 30, 0, 6.2832); g.stroke();
+      g.fillStyle = 'rgba(230,202,146,0.6)'; g.beginPath(); g.arc(cx, cy, 12, 0, 6.2832); g.fill();
+    }
+  }, [11.25, 5]) });
+  var mMarble = std(0xffffff, 0.28, 0, { map: canvasTex(512, 512, function(g, w, h){
+    g.fillStyle = '#b6a48c'; g.fillRect(0, 0, w, h);
+    for (var i = 0; i < 40; i++) { g.strokeStyle = 'rgba(' + (rnd() < 0.5 ? '236,224,204' : '120,100,80') + ',' + (0.12 + rnd() * 0.2) + ')'; g.lineWidth = 1 + rnd() * 2; g.beginPath(); var x = rnd() * w, y = rnd() * h; g.moveTo(x, y); for (var j = 0; j < 5; j++) { x += (rnd() - 0.5) * 160; y += (rnd() - 0.5) * 160; g.lineTo(x, y); } g.stroke(); }
+    g.strokeStyle = 'rgba(70,56,44,0.55)'; g.lineWidth = 3; g.strokeRect(0, 0, w, h); g.strokeRect(0, 0, w / 2, h / 2); g.strokeRect(w / 2, h / 2, w / 2, h / 2);
+  }, [0.25, 0.25]) });
+  var mWall = std(0x8c7461, 0.9), mWallF = std(0xa08a74, 0.9), mWood = std(0x4a3626, 0.55), mPil = std(0x9a826c, 0.8);
+  var mCeil = std(0x8f7f6c, 0.95), mBeam = std(0x4a3a2c, 0.9);
+  var mGloss = std(0x070707, 0.2, 0, { envMapIntensity: 0.55 });
+  var mGold = std(0xb08d57, 0.3, 0.9);
+  var mCloth = std(CLOTH.getHex(), 0.88), mRunner = std(new T.Color('#6e1423').getHex(), 0.75);
+  var mDrape = std(0x5a5c3a, 0.92, 0, { side: T.DoubleSide }), mBurg = std(0x6e1423, 0.78, 0, { side: T.DoubleSide });
+  var mChair = std(0x15120f, 0.42, 0.1), mCush = std(0xe9e1d0, 0.9), mCream = std(0xe6dbc6, 0.85, 0, { side: T.DoubleSide });
+  var mIvory = std(0xf2ead8, 0.35), mWax = std(0xf4ebd6, 0.6, 0, { emissive: 0x6a4416, emissiveIntensity: 0.55 });
+  var mFlame = new T.MeshBasicMaterial({ color: new T.Color(0xffd894).convertSRGBToLinear() });
+  var mGlass = std(0xffffff, 0.05, 0, { transparent: true, opacity: 0.22, depthWrite: false, envMapIntensity: 1.6 });
+  var mFlower = std(0xffffff, 0.78);
+  var mCrystal = std(0xfff2d6, 0.08, 0, { emissive: 0xffc680, emissiveIntensity: 0.9 });
+  var mLightStrip = new T.MeshBasicMaterial({ color: new T.Color(0xffcf9a).convertSRGBToLinear() });
+  var mDark = std(0x1c1a1a, 0.6);
+
+  var UB = new T.BoxGeometry(1, 1, 1), UC = new T.CylinderGeometry(1, 1, 1, 10), UC24 = new T.CylinderGeometry(1, 1, 1, 24);
+  def('cbox', UB, mChair); def('ccyl', UC, mChair); def('cush', UB, mCush);
+  def('clothBox', UB, mCloth); def('runner', UB, mRunner, false);
+  def('plate', UC24, mIvory, false); def('napkin', UB, mRunner, false); def('glass', UC, mGlass, false);
+  def('fl', new T.IcosahedronGeometry(1, small ? 0 : 1), mFlower, !small);
+  def('wax', UC, mWax, false); def('flame', new T.SphereGeometry(1, 8, 6), mFlame, false); def('hurr', new T.CylinderGeometry(1, 1, 1, 16, 1, true), mGlass, false);
+  def('crystal', new T.OctahedronGeometry(1, 0), mCrystal, false);
+  def('crystalTall', new T.OctahedronGeometry(1, 0), mCrystal, false, tall);
+  def('down', new T.CylinderGeometry(1, 1, 1, 12), mLightStrip, false, tall);
+  (function(){
+    var pts = [new T.Vector2(0, 0.76), new T.Vector2(0.92, 0.76), new T.Vector2(0.95, 0.745), new T.Vector2(0.97, 0.6), new T.Vector2(1.0, 0.02)];
+    var g = new T.LatheGeometry(pts, 64), p = g.attributes.position;
+    for (var i = 0; i < p.count; i++) { var y = p.getY(i); if (y < 0.74) { var x = p.getX(i), z = p.getZ(i), k = 1 + 0.045 * Math.sin(Math.atan2(x, z) * 16) * (1 - y / 0.76); p.setX(i, x * k); p.setZ(i, z * k); } }
+    g.computeVertexNormals();
+    def('rcloth', g, mCloth);
+  })();
+
+  var glowBig = [], glowSmall = [];
+  var PAL = (function(){
+    var c = function(h){ return new T.Color(h); }, b = BLOOM;
+    return [b.clone().multiplyScalar(0.6), b.clone(), b.clone(), b.clone().multiplyScalar(1.35), b.clone().lerp(c('#c0327a'), 0.55), b.clone().lerp(c('#c0327a'), 0.3), c('#9aa858'), c('#5e6634'), c('#465028'), c('#b87a76')].map(function(x){ return x.convertSRGBToLinear(); });
+  })();
+  function mound(cx, y0, cz, rx, h, rz, n){
+    n = Math.round(n * (small ? 1.5 : 2.4));
+    for (var i = 0; i < n; i++) {
+      var u = rnd() * 2 - 1, w = rnd() * 2 - 1, d = u * u + w * w;
+      if (d > 1) { var k = rnd() / Math.sqrt(d); u *= k; w *= k; }
+      var t = 1 - (u * u + w * w), y = y0 + 0.05 + h * t * (0.25 + 0.75 * rnd()), s = 0.04 + 0.055 * rnd();
+      put('fl', M(cx + u * rx, y, cz + w * rz, rnd() * 6, s, s * (0.6 + 0.35 * rnd()), s), PAL[(rnd() * PAL.length) | 0].clone().multiplyScalar(0.5 + 0.45 * rnd()));
+    }
+  }
+  function candle(x, y0, z, h, hurricane){
+    put('wax', M(x, y0 + h / 2, z, 0, 0.036, h, 0.036));
+    put('flame', M(x, y0 + h + 0.03, z, 0, 0.012, 0.03, 0.012));
+    glowBig.push(x, y0 + h + 0.04, -z);
+    if (hurricane) put('hurr', M(x, y0 + (h + 0.14) / 2, z, 0, 0.075, h + 0.14, 0.075));
+  }
+  function chair(x, z, fx, fz, yb){
+    var B = M(x, yb || 0, z, Math.atan2(fx, -fz), 1, 1, 1);
+    var part = function(key, l){ put(key, B.clone().multiply(l)); };
+    part('cbox', L(0, 0.45, 0, 0.42, 0.035, 0.42));
+    part('cush', L(0, 0.49, 0, 0.38, 0.04, 0.38));
+    var lx = [-0.19, 0.19];
+    for (var i = 0; i < 2; i++) {
+      part('ccyl', L(lx[i], 0.225, 0.19, 0.016, 0.45, 0.016));
+      part('ccyl', L(lx[i], 0.49, -0.2, 0.017, 0.98, 0.017));
+    }
+    part('cbox', L(0, 0.96, -0.2, 0.42, 0.05, 0.03));
+    part('cbox', L(0, 0.62, -0.2, 0.4, 0.03, 0.022));
+    for (var j = 0; j < 4; j++) part('ccyl', L(-0.12 + j * 0.08, 0.79, -0.2, 0.008, 0.33, 0.008));
+  }
+  function setting(x, z, ox, oz){
+    put('plate', M(x, 0.767, z, 0, 0.14, 0.012, 0.14));
+    put('napkin', M(x, 0.782, z, Math.atan2(ox, -oz), 0.06, 0.018, 0.19));
+    put('glass', M(x - ox * 0.2 + oz * 0.12, 0.84, z - oz * 0.2 - ox * 0.12, 0, 0.034, 0.15, 0.034));
+  }
+  function textSprite(text, x, y, z, kind){
+    var pad = kind === 'num' ? 0 : 26, fs = 44;
+    var c = document.createElement('canvas'), g = c.getContext('2d');
+    g.font = '700 ' + fs + 'px Manrope, system-ui, sans-serif';
+    var w = kind === 'num' ? 84 : Math.ceil(g.measureText(text).width) + pad * 2, h = 84;
+    c.width = w; c.height = h; g = c.getContext('2d');
+    g.font = '700 ' + fs + 'px Manrope, system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    if (kind === 'area') { g.lineWidth = 9; g.lineJoin = 'round'; g.strokeStyle = 'rgba(12,9,8,0.9)'; g.strokeText(text, w / 2, h / 2 + 2); g.fillStyle = '#f6eee0'; g.fillText(text, w / 2, h / 2 + 2); }
+    else {
+      g.fillStyle = 'rgba(246,238,224,0.96)';
+      if (kind === 'num') { g.beginPath(); g.arc(42, 42, 40, 0, 6.2832); g.fill(); } else { g.fillRect(0, 6, w, h - 12); }
+      g.fillStyle = '#1a1412'; g.fillText(text, w / 2, h / 2 + 3);
+    }
+    var t = new T.CanvasTexture(c); t.encoding = T.sRGBEncoding;
+    var sp = new T.Sprite(new T.SpriteMaterial({ map: t, depthTest: false, transparent: true }));
+    var sc = kind === 'num' ? 1.25 : kind === 'area' ? 1.05 : 0.95;
+    sp.scale.set(sc * w / h, sc, 1); sp.position.set(x, y, -z); sp.renderOrder = 10; labels.add(sp);
+  }
+
+  /* ---------- room shell ---------- */
+  var floor = new T.Mesh(new T.PlaneGeometry(45, 20), mCarpet);
+  floor.rotation.x = -Math.PI / 2; floor.position.set(22.5, 0, -10); floor.receiveShadow = true; scene.add(floor);
+  var ground = new T.Mesh(new T.PlaneGeometry(300, 300), std(0x0b0807, 1));
+  ground.rotation.x = -Math.PI / 2; ground.position.set(22.5, -0.03, 0); scene.add(ground);
+  (function(){
+    var s = new T.Shape(); s.moveTo(2, 0); s.lineTo(45, 0); s.lineTo(45, -15); s.lineTo(36, -15); s.lineTo(2, -5); s.closePath();
+    var f = new T.Mesh(new T.ShapeGeometry(s), mMarble); f.rotation.x = -Math.PI / 2; f.position.y = 0.001; f.receiveShadow = true; scene.add(f);
+    var s2 = new T.Shape(); s2.moveTo(2, 0); s2.lineTo(45, 0); s2.lineTo(45, 15); s2.lineTo(36, 15); s2.lineTo(2, 5); s2.closePath();
+    var c = new T.Mesh(new T.ShapeGeometry(s2), std(0x8a7663, 0.95)); c.rotation.x = Math.PI / 2; c.position.y = 4; tall.add(c);
+  })();
+  var ceil = new T.Mesh(new T.PlaneGeometry(45, 20), mCeil); ceil.rotation.x = Math.PI / 2; ceil.position.set(22.5, 7, -10); tall.add(ceil);
+  /* ceiling as in the ballroom photo: three recessed bays edged with cove light, each with a rectangular art-glass fixture */
+  box(tall, mBeam, 14.7, 6.6, 0, 15.3, 7, 20, false); box(tall, mBeam, 29.7, 6.6, 0, 30.3, 7, 20, false);
+  var mCoffer = std(0xc4b39a, 0.95), FIXBASE = new T.Color(0xffdcae).convertSRGBToLinear(), mFix = new T.MeshBasicMaterial({ color: FIXBASE.clone() }), fixLights = [];
+  [7.5, 22.5, 37.5].forEach(function(x){
+    var cf = new T.Mesh(new T.PlaneGeometry(11, 12), mCoffer); cf.rotation.x = Math.PI / 2; cf.position.set(x, 6.99, -10); tall.add(cf);
+    box(tall, mLightStrip, x - 5.5, 6.88, 3.95, x + 5.5, 6.97, 4.07, false); box(tall, mLightStrip, x - 5.5, 6.88, 15.93, x + 5.5, 6.97, 16.05, false);
+    box(tall, mLightStrip, x - 5.56, 6.88, 4, x - 5.44, 6.97, 16, false); box(tall, mLightStrip, x + 5.44, 6.88, 4, x + 5.56, 6.97, 16, false);
+    box(tall, mBeam, x - 1.75, 6.72, 8.75, x + 1.75, 6.98, 11.25, false);
+    box(tall, mFix, x - 1.6, 6.56, 8.9, x + 1.6, 6.72, 11.1, false);
+    for (var q = 1; q < 4; q++) box(tall, mBeam, x - 1.6 + q * 0.8 - 0.02, 6.545, 8.9, x - 1.6 + q * 0.8 + 0.02, 6.56, 11.1, false);
+    box(tall, mBeam, x - 1.6, 6.545, 9.98, x + 1.6, 6.56, 10.02, false);
+    var fp = new T.PointLight(0xffd9a8, 0.75, 24, 1.6); fp.position.set(x, 6.2, -10); scene.add(fp); fixLights.push(fp);
+  });
+  for (var di = 0; di < 18; di++) for (var dj = 0; dj < 8; dj++) put('down', M(1.25 + di * 2.5, 6.985, 1.25 + dj * 2.5, 0, 0.07, 0.02, 0.07));
+  box(tall, mLightStrip, 0.2, 6.5, 19.72, 44.8, 6.58, 19.8, false); box(tall, mLightStrip, 0.2, 6.5, 0.2, 44.8, 6.58, 0.28, false);
+  box(tall, mLightStrip, 0.2, 6.5, 0.2, 0.28, 6.58, 19.8, false); box(tall, mLightStrip, 44.72, 6.5, 0.2, 44.8, 6.58, 19.8, false);
+
+  wallSeg(0, 0, 0, 20, 7, mWall); wallSeg(0, 20, 45, 20, 7, mWall); wallSeg(45, 20, 45, 0, 7, mWall);
+  wallSeg(0, 0, 6.7, 0, 7, mWall); wallSeg(8.7, 0, 38, 0, 7, mWall); wallSeg(40, 0, 45, 0, 7, mWall);
+  wallSeg(2, -5, 36, -15, 4, mWallF); wallSeg(36, -15, 45, -15, 4, mWallF); wallSeg(2, -5, 2, 0, 4, mWallF); wallSeg(45, -15, 45, 0, 4, mWallF);
+  box(tall, mWall, 6.7, 3.2, -0.12, 8.7, 7, 0.12, false); box(tall, mWall, 38, 3.2, -0.12, 40, 7, 0.12, false);
+  /* every ballroom wall is covered floor to ceiling in pleated fabric in the theme's olive; only the two working doors stay open */
+  var mWallDrape = std(0x161514, 0.9, 0, { side: T.DoubleSide });
+  function wallDrape(parent, x0, z0, x1, z1, y0, y1){ var d = drape(parent, mWallDrape, x0, z0, x1, z1, y0, y1); d.castShadow = false; return d; }
+  wallDrape(walls, 0.3, 19.72, 17.5, 19.72, 0, 7); wallDrape(walls, 29.5, 19.72, 44.7, 19.72, 0, 7);
+  wallDrape(walls, 0.22, 0.3, 0.22, 19.7, 0, 7); wallDrape(walls, 44.78, 0.3, 44.78, 19.7, 0, 7);
+  wallDrape(walls, 0.3, 0.3, 6.6, 0.3, 0, 7); wallDrape(walls, 8.8, 0.3, 37.9, 0.3, 0, 7); wallDrape(walls, 40.1, 0.3, 44.7, 0.3, 0, 7);
+  wallDrape(tall, 6.6, 0.3, 8.8, 0.3, 3.3, 7); wallDrape(tall, 37.9, 0.3, 40.1, 0.3, 3.3, 7);
+  /* the two middle doors, closed */
+  [[20.4, 22.4], [24.5, 26.5]].forEach(function(d){
+    box(walls, mWood, d[0], 0, 0.12, d[1], 3.1, 0.2, false); box(walls, mWood, d[0], 0, -0.2, d[1], 3.1, -0.12, false);
+    box(walls, mGold, (d[0] + d[1]) / 2 - 0.02, 0, -0.215, (d[0] + d[1]) / 2 + 0.02, 3.1, -0.2, false);
+  });
+  /* door frames */
+  [[6.7, 8.7], [38, 40]].forEach(function(d){ box(tall, mWood, d[0] - 0.12, 0, -0.16, d[0], 3.3, 0.16, false); box(tall, mWood, d[1], 0, -0.16, d[1] + 0.12, 3.3, 0.16, false); box(tall, mWood, d[0] - 0.12, 3.2, -0.16, d[1] + 0.12, 3.34, 0.16, false); });
+  /* spiral stair drum by the lifts */
+  cyl(scene, std(0x9a8670, 0.6), 42.3, -3.6, 2.0, 0, 1.05, 40); cyl(scene, mWood, 42.3, -3.6, 0.9, 1.05, 1.25, 24);
+
+  /* ---------- catwalk and dance floor ---------- */
+  var mTrim = std(0xbfa97f, 0.4, 0.6);
+  [[38, -0.6, 40, 5.6], [22.4, 3.4, 40, 5.6], [22.4, 5.6, 24.6, 6.6]].forEach(function(w){
+    box(scene, mTrim, w[0] - 0.07, 0, w[1] - 0.07, w[2] + 0.07, 0.012, w[3] + 0.07, false);
+    box(scene, mGloss, w[0], 0, w[1], w[2], 0.022, w[3], false);
+  });
+  cyl(scene, mGloss, 23.5, 9, 2.75, 0, 0.14, 64, false);
+  (function(){ var t = new T.Mesh(new T.TorusGeometry(2.75, 0.03, 8, 96), mGold); t.rotation.x = Math.PI / 2; t.position.set(23.5, 0.14, -9); scene.add(t); })();
+  [26.5, 29.5, 32.5, 35.5].forEach(function(x){
+    mound(x, 0, 2.95, 0.5, 0.75, 0.38, 80);
+    candle(x + 1.2, 0, 3.1, 0.42, true); candle(x + 1.5, 0, 2.98, 0.28, true); candle(x + 0.7, 0, 5.95, 0.36, true); candle(x + 2.2, 0, 5.95, 0.26, true);
+  });
+  mound(37.5, 0, 1.5, 0.42, 0.8, 0.5, 70); mound(40.5, 0, 1.5, 0.42, 0.8, 0.5, 70); mound(40.5, 0, 4.6, 0.42, 0.8, 0.5, 70);
+
+  /* canopy */
+  var CX0 = 20.1, CX1 = 26.9, CZ0 = 6, CZ1 = 12, CH = 4.55, mPost = std(0x2a211a, 0.4, 0.5);
+  [[CX0, CZ0], [CX1, CZ0], [CX0, CZ1], [CX1, CZ1]].forEach(function(p){ box(scene, mPost, p[0] - 0.08, 0, p[1] - 0.08, p[0] + 0.08, CH, p[1] + 0.08); mound(p[0], 0, p[1], 0.45, 0.9, 0.45, 60); });
+  box(scene, mPost, CX0, CH, CZ0 - 0.08, CX1, CH + 0.16, CZ0 + 0.08); box(scene, mPost, CX0, CH, CZ1 - 0.08, CX1, CH + 0.16, CZ1 + 0.08);
+  box(scene, mPost, CX0 - 0.08, CH, CZ0, CX0 + 0.08, CH + 0.16, CZ1); box(scene, mPost, CX1 - 0.08, CH, CZ0, CX1 + 0.08, CH + 0.16, CZ1);
+  (function(){
+    var g = new T.PlaneGeometry(CX1 - CX0, CZ1 - CZ0, 40, 40), p = g.attributes.position, hw = (CX1 - CX0) / 2, hd = (CZ1 - CZ0) / 2;
+    for (var i = 0; i < p.count; i++) { var u = p.getX(i) / hw, v = p.getY(i) / hd; p.setZ(i, -0.55 * Math.cos(u * 1.5708) * Math.cos(v * 1.5708) + 0.035 * Math.sin(u * 30) * Math.cos(v * 1.5708)); }
+    g.computeVertexNormals();
+    var m = new T.Mesh(g, mBurg); m.rotation.x = -Math.PI / 2; m.position.set(23.5, CH + 0.08, -9); m.castShadow = true; scene.add(m);
+  })();
+  drape(scene, mBurg, CX0, CZ0, CX1, CZ0, CH - 0.6, CH); drape(scene, mBurg, CX0, CZ1, CX1, CZ1, CH - 0.6, CH);
+  drape(scene, mBurg, CX0, CZ0, CX0, CZ1, CH - 0.6, CH); drape(scene, mBurg, CX1, CZ0, CX1, CZ1, CH - 0.6, CH);
+
+  function chandelier(parent, key, x, y, z, s, top, intensity, dist){
+    var rr = [1.0, 0.7, 0.4], yy = [0.35, 0, -0.32], nn = [20, 14, 8];
+    for (var t = 0; t < 3; t++) {
+      var ring = new T.Mesh(new T.TorusGeometry(rr[t] * s, 0.022 * s, 8, 48), mGold); ring.rotation.x = Math.PI / 2; ring.position.set(x, y + yy[t] * s, -z); parent.add(ring);
+      for (var i = 0; i < nn[t]; i++) {
+        var a = i / nn[t] * 6.2832 + t * 0.3, px = x + rr[t] * s * Math.cos(a), pz = z + rr[t] * s * Math.sin(a);
+        for (var j = 0; j < 4; j++) { var cs = 0.03 * s * (1 - 0.14 * j); put(key, M(px, y + yy[t] * s - 0.07 * s - j * 0.1 * s, pz, a, cs, cs * 1.7, cs)); }
+        glowSmall.push(px, y + yy[t] * s - 0.05 * s, -pz);
+      }
+    }
+    var rod = new T.Mesh(new T.CylinderGeometry(0.015, 0.015, Math.max(0.1, top - y - 0.35 * s), 6), mGold); rod.position.set(x, (top + y + 0.35 * s) / 2, -z); parent.add(rod);
+    var pl = new T.PointLight(0xffc68a, intensity, dist, 1.6); pl.position.set(x, y - 0.1, -z); scene.add(pl);
+    return pl;
+  }
+  var canopyLight = chandelier(scene, 'crystal', 23.5, 3.2, 9, 0.85, 4.1, 1.25, 14);
+  chandelier(tall, 'crystalTall', 24.5, 3.2, -5, 0.6, 4, 0.9, 13);
+  chandelier(tall, 'crystalTall', 34, 3.2, -7.5, 0.6, 4, 0.9, 13);
+
+  /* ---------- pelaminan ---------- */
+  box(scene, mGloss, 17.5, 0, 16.2, 29.5, 0.6, 20);
+  box(scene, mGloss, 21.5, 0, 15.5, 25.5, 0.2, 16.2); box(scene, mGloss, 21.5, 0.2, 15.85, 25.5, 0.4, 16.2);
+  drape(scene, mDrape, 17.5, 19.8, 29.5, 19.8, 0.6, 6.5);
+  function arch(rx, ry){
+    var s = new T.Shape(); s.moveTo(-rx, 0); s.absellipse(0, 0, rx, ry, Math.PI, 0, true); s.lineTo(-rx, 0);
+    var g = new T.ShapeGeometry(s, 48), p = g.attributes.position, uv = g.attributes.uv;
+    for (var i = 0; i < p.count; i++) uv.setXY(i, (p.getX(i) + rx) / (2 * rx), p.getY(i) / ry);
+    return g;
+  }
+  var muralTex = canvasTex(1024, 512, function(g, w, h){
+    var gr = g.createRadialGradient(w / 2, h * 0.55, 30, w / 2, h * 0.55, w * 0.62); gr.addColorStop(0, '#fbf3e2'); gr.addColorStop(1, '#cdbda2');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    var tree = function(tx, ty, sc){
+      g.strokeStyle = 'rgba(96,92,70,0.3)'; g.lineWidth = 5 * sc; g.beginPath(); g.moveTo(tx, h); g.quadraticCurveTo(tx + 14 * sc, ty + 120 * sc, tx - 6 * sc, ty + 30 * sc); g.stroke();
+      for (var i = 0; i < 70; i++) { var a = rnd() * 6.28, r = rnd() * 105 * sc; g.fillStyle = 'rgba(' + (96 + rnd() * 30 | 0) + ',' + (100 + rnd() * 30 | 0) + ',' + (72 + rnd() * 20 | 0) + ',0.075)'; g.beginPath(); g.arc(tx + Math.cos(a) * r * 1.25, ty + Math.sin(a) * r * 0.7, (18 + rnd() * 30) * sc, 0, 6.2832); g.fill(); }
+    };
+    tree(190, 190, 1.05); tree(330, 250, 0.7); tree(820, 180, 1.1); tree(690, 260, 0.65);
+    g.fillStyle = 'rgba(120,116,90,0.14)'; g.beginPath(); g.moveTo(0, h); g.quadraticCurveTo(w * 0.25, h * 0.62, w * 0.5, h * 0.8); g.quadraticCurveTo(w * 0.78, h * 0.62, w, h); g.fill();
+  });
+  var mMural = std(0xffffff, 0.9, 0, { map: muralTex, emissive: 0xffffff, emissiveMap: muralTex, emissiveIntensity: 0.28 });
+  (function(){ var m = new T.Mesh(arch(4.8, 4.7), mMural); m.position.set(23.5, 0.6, -19.62); m.receiveShadow = true; scene.add(m); })();
+  box(scene, mCloth, 22.4, 0.6, 17.6, 24.6, 1.38, 18.4);
+  chair(22.95, 18.85, 0, -1, 0.6); chair(24.05, 18.85, 0, -1, 0.6);
+  mound(20.4, 0.6, 17.6, 1.6, 1.6, 0.85, 360); mound(26.6, 0.6, 17.6, 1.6, 1.6, 0.85, 360);
+  mound(23.5, 0.6, 17.05, 1.25, 0.45, 0.36, 110); mound(19.7, 1.7, 18.7, 0.65, 1.4, 0.4, 80); mound(27.3, 1.7, 18.7, 0.65, 1.4, 0.4, 80);
+  mound(23.5, 1.38, 18.0, 0.5, 0.36, 0.22, 36); mound(18.2, 0, 15.75, 1.0, 0.95, 0.38, 120); mound(28.8, 0, 15.75, 1.0, 0.95, 0.38, 120);
+  [18.5, 19.0, 22.1, 22.5, 24.5, 24.9, 28.0, 28.5].forEach(function(x, i){ candle(x, 0.6, 16.55 + (i % 2) * 0.22, 0.3 + (i % 3) * 0.12, true); });
+
+  /* ---------- music stage and food stalls ---------- */
+  box(scene, mGloss, 2.5, 0, 17, 8.5, 0.5, 20);
+  drape(scene, mDrape, 2.5, 19.82, 8.5, 19.82, 0.5, 4.6);
+  box(scene, mDark, 2.8, 0.5, 17.5, 3.4, 1.7, 18.1); box(scene, mDark, 7.6, 0.5, 17.5, 8.2, 1.7, 18.1);
+  box(scene, mDark, 4.1, 1.32, 18.0, 5.5, 1.42, 18.45); cyl(scene, mDark, 4.3, 18.22, 0.02, 0.5, 1.32, 6); cyl(scene, mDark, 5.3, 18.22, 0.02, 0.5, 1.32, 6);
+  cyl(scene, mRunner, 6.7, 19.0, 0.36, 0.5, 1.0, 24); cyl(scene, mRunner, 6.0, 19.25, 0.24, 0.55, 1.15, 20); cyl(scene, mGold, 7.3, 19.3, 0.2, 1.4, 1.42, 20);
+  cyl(scene, mDark, 4.5, 17.5, 0.015, 0.5, 2.0, 6); cyl(scene, mDark, 6.1, 17.5, 0.015, 0.5, 2.0, 6);
+  var mStall = std(0xddd0b8, 0.85), mFood = [std(0xd29646, 0.6), std(0xece0c4, 0.5), std(0x963c28, 0.6), std(0x788c46, 0.7)];
+  function stall(xa, xb, xp, zc){
+    box(scene, mStall, xa, 0, zc - 1.1, xb, 0.95, zc + 1.1);
+    box(scene, mDrape, xa - 0.1, 2.3, zc - 1.25, xb + 0.1, 2.42, zc + 1.25);
+    cyl(scene, mPost, xp, zc - 1.15, 0.025, 0.95, 2.3, 8); cyl(scene, mPost, xp, zc + 1.15, 0.025, 0.95, 2.3, 8);
+    for (var j = 0; j < 4; j++) cyl(scene, mFood[j], (xa + xb) / 2, zc - 0.75 + j * 0.5, 0.17, 0.95, 1.05, 16);
+    candle((xa + xb) / 2 + 0.2, 0.95, zc + 0.98, 0.2, false);
+  }
+  [3, 8.5, 14].forEach(function(z){ stall(0.3, 1.2, 1.3, z); });
+  [9, 13.5, 18].forEach(function(z){ stall(43.8, 44.7, 43.7, z); });
+
+  /* ---------- tables ---------- */
+  function roundTable(cx, cz, num){
+    put('rcloth', M(cx, 0, cz, rnd() * 6, 1, 1, 1));
+    for (var i = 0; i < 10; i++) {
+      var a = i / 10 * 6.2832 + 0.2, ca = Math.cos(a), sa = Math.sin(a);
+      chair(cx + 1.3 * ca, cz + 1.3 * sa, -ca, -sa, 0);
+      setting(cx + 0.68 * ca, cz + 0.68 * sa, ca, sa);
+    }
+    mound(cx, 0.76, cz, 0.3, 0.42, 0.3, 36);
+    candle(cx + 0.4, 0.76, cz + 0.1, 0.22, true); candle(cx - 0.3, 0.76, cz - 0.3, 0.3, true); candle(cx - 0.14, 0.76, cz + 0.4, 0.16, true);
+    textSprite(String(num), cx, 1.7, cz, 'num');
+  }
+  [[13.5, 3.5], [13.5, 8.5], [13.5, 13.5], [10, 6], [10, 11], [6.5, 3.5], [6.5, 8.5], [6.5, 13.5], [3, 6], [3, 11]].forEach(function(p, i){ roundTable(p[0], p[1], i + 1); });
+  [[32.8, 8.2], [32.8, 12.7], [32.8, 17.2], [35.9, 10.4], [35.9, 15], [39, 8.2], [39, 12.7], [39, 17.2], [42.1, 10.4], [42.1, 15]].forEach(function(p, i){ roundTable(p[0], p[1], i + 11); });
+  function familyTable(cx, cz, name){
+    put('clothBox', M(cx, 0.39, cz, 0, 1.1, 0.74, 3.0));
+    put('runner', M(cx, 0.766, cz, 0, 0.34, 0.01, 3.0));
+    [-1.05, -0.35, 0.35, 1.05].forEach(function(t){
+      chair(cx - 0.95, cz + t, 1, 0, 0); chair(cx + 0.95, cz + t, -1, 0, 0);
+      setting(cx - 0.36, cz + t, -1, 0); setting(cx + 0.36, cz + t, 1, 0);
+    });
+    [-0.95, 0, 0.95].forEach(function(t){ mound(cx, 0.76, cz + t, 0.14, 0.3, 0.34, 16); });
+    candle(cx, 0.77, cz - 0.48, 0.26, true); candle(cx, 0.77, cz + 0.48, 0.26, true);
+    textSprite(name, cx, 1.7, cz, 'pill');
+  }
+  [7.8, 10.8, 13.8].forEach(function(z, i){ familyTable(17.1, z, 'Kel. A' + (i + 1)); familyTable(29.9, z, 'Kel. B' + (i + 1)); });
+  /* keluarga inti: 10 seats on one side, facing the pelaminan straight across the dance floor */
+  put('clothBox', M(23.5, 0.39, 1.7, 0, 6.5, 0.74, 1.0));
+  put('runner', M(23.5, 0.766, 1.93, 0, 6.5, 0.01, 0.3));
+  for (var fi = 0; fi < 10; fi++) { var fx = 23.5 + (fi - 4.5) * 0.65; chair(fx, 0.72, 0, 1, 0); setting(fx, 1.5, 0, -1); }
+  for (var fj = 0; fj < 5; fj++) mound(21 + fj * 1.25, 0.76, 1.95, 0.4, 0.16, 0.12, 14);
+  for (var fk = 0; fk < 4; fk++) candle(21.62 + fk * 1.25, 0.77, 1.95, 0.16, true);
+  textSprite('Keluarga inti (10)', 23.5, 1.7, 1.7, 'pill');
+
+  /* ---------- foyer ---------- */
+  box(scene, mGloss, 11, 0, -7.1, 13.6, 0.02, -2.1, false);
+  drape(scene, mDrape, 11, -7.2, 11, -2.0, 0, 3.5);
+  (function(){ var m = new T.Mesh(arch(1.8, 3.05), mMural); m.rotation.y = Math.PI / 2; m.position.set(11.2, 0.02, 4.6); scene.add(m); })();
+  mound(11.9, 0, -6.6, 0.7, 1.3, 0.6, 150); mound(11.9, 0, -2.6, 0.7, 1.3, 0.6, 150); mound(11.7, 1.5, -6.8, 0.4, 1.0, 0.35, 40);
+  candle(12.8, 0, -6.0, 0.4, true); candle(12.9, 0, -3.2, 0.4, true); candle(13.1, 0, -5.7, 0.25, true);
+  [17.7, 20.7].forEach(function(x){
+    box(scene, mCloth, x, 0, -8.6, x + 1.8, 0.76, -7.9);
+    chair(x + 0.5, -9.0, 0, 1, 0); chair(x + 1.3, -9.0, 0, 1, 0);
+    mound(x + 1.45, 0.76, -8.25, 0.25, 0.4, 0.2, 24); candle(x + 0.3, 0.76, -8.2, 0.24, true);
+  });
+  var signTex = null, signCanvas = document.createElement('canvas'); signCanvas.width = 512; signCanvas.height = 690;
+  function drawSign(){
+    var g = signCanvas.getContext('2d'), w = 512, h = 690;
+    g.fillStyle = '#f3ebda'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = '#7a1628'; g.lineWidth = 3; g.strokeRect(22, 22, w - 44, h - 44);
+    g.fillStyle = '#3a1016'; g.textAlign = 'center';
+    g.font = 'italic 500 96px "Cormorant Garamond", Georgia, serif'; g.fillText('Welcome', w / 2, 230);
+    g.font = '600 20px Manrope, system-ui, sans-serif'; g.fillText('T O   T H E   W E D D I N G   O F', w / 2, 300);
+    g.font = '600 50px "Cormorant Garamond", Georgia, serif'; g.fillText('[NAMA] & [NAMA]', w / 2, 400);
+    g.font = '600 20px Manrope, system-ui, sans-serif'; g.fillText('[TANGGAL]', w / 2, 470);
+  }
+  drawSign(); signTex = new T.CanvasTexture(signCanvas); signTex.encoding = T.sRGBEncoding; signTex.anisotropy = 4;
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ drawSign(); signTex.needsUpdate = true; });
+  box(scene, mWood, 35.42, 0.5, -5.52, 35.5, 1.96, -4.38);
+  (function(){ var m = new T.Mesh(new T.PlaneGeometry(1.0, 1.35), std(0xffffff, 0.8, 0, { map: signTex, emissive: 0xffffff, emissiveMap: signTex, emissiveIntensity: 0.25 })); m.rotation.y = Math.PI / 2; m.position.set(35.51, 1.23, 4.95); scene.add(m); })();
+  cyl(scene, mWood, 35.46, -5.4, 0.025, 0, 0.5, 6); cyl(scene, mWood, 35.46, -4.5, 0.025, 0, 0.5, 6);
+  mound(35.65, 0, -4.95, 0.6, 0.55, 0.7, 80); candle(36.1, 0, -4.2, 0.35, true); candle(36.15, 0, -5.7, 0.25, true);
+  function arc(cx, cz, R, a0){
+    var m = new T.Mesh(new T.CylinderGeometry(R, R, 2.3, 28, 1, true, (a0 + 90) * Math.PI / 180, Math.PI / 2), mCream);
+    m.position.set(cx, 1.15, -cz); m.castShadow = true; m.receiveShadow = true; scene.add(m);
+    for (var i = 0; i < 90; i++) { var a = (a0 + rnd() * 90) * Math.PI / 180, top = rnd() < 0.6, s = 0.07 + rnd() * 0.08; put('fl', M(cx + R * Math.cos(a), top ? 2.3 + rnd() * 0.22 : 0.08 + rnd() * 0.3, cz + R * Math.sin(a) + (top ? 0 : (rnd() - 0.5) * 0.3), rnd() * 6, s, s * 0.8, s), PAL[(rnd() * PAL.length) | 0].clone().multiplyScalar(0.8 + 0.4 * rnd())); }
+  }
+  arc(36.5, 0.5, 3, 200); arc(36.5, -12.5, 3.2, 70);
+
+  /* ---------- labels ---------- */
+  [['PELAMINAN', 23.5, 18.6], ['DANCE FLOOR', 23.5, 9], ['MUSIC', 5.5, 18.6], ['STALL MAKANAN', 2.4, 16.6], ['STALL MAKANAN', 42.6, 6.6], ['CATWALK', 31.5, 4.5], ['PINTU MASUK', 39, -1.4], ['PINTU', 7.7, -1.2], ['2 PINTU DITUTUP', 23.5, -1.2], ['PHOTOBOOTH', 13.4, -4.6], ['REGISTRASI', 20.5, -7.0], ['WELCOME SIGN', 35.6, -6.8], ['TANGGA', 42.3, -3.6], ['LIFT', 41.5, -12.5]].forEach(function(a){ textSprite(a[0], a[1], 0.6, a[2], 'area'); });
+
+  flush();
+
+  /* candle and crystal glows */
+  var glowTex = canvasTex(64, 64, function(g){ var gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,220,160,1)'); gr.addColorStop(0.25, 'rgba(255,180,100,0.45)'); gr.addColorStop(1, 'rgba(255,150,70,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); });
+  function points(arr, size, parent){
+    var g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(arr, 3));
+    var m = new T.PointsMaterial({ map: glowTex, size: size, sizeAttenuation: true, transparent: true, depthWrite: false, blending: T.AdditiveBlending, color: 0xffc890 });
+    var p = new T.Points(g, m); p.frustumCulled = false; parent.add(p); return m;
+  }
+  var glowMatA = points(glowBig, 0.55, scene), glowMatB = points(glowSmall, 0.2, scene);
+
+  /* ---------- lights ---------- */
+  /* two lighting modes: every light has a "terang" level and an "entry" level, and the frame loop fades between them */
+  var LS = [], BEAMS = [], lm = 0, lmTarget = 0, lmApplied = -1, STRIPBASE = mLightStrip.color.clone();
+  function reg(l, a, b){ LS.push([l, a, b]); l.intensity = a; return l; }
+  var hemi = new T.HemisphereLight(0xffe6c8, 0x15100d, 0.5); scene.add(hemi); reg(hemi, 0.5, 0.05);
+  reg(canopyLight, 1.25, 0.3); fixLights.forEach(function(l){ reg(l, 0.75, 0); });
+  var beamTex = canvasTex(8, 128, function(g, w, h){ var gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#ffffff'); gr.addColorStop(1, '#3a342c'); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
+  function beam(x, y, z, tx, ty, tz, angle){
+    var a = new T.Vector3(x, y, -z), b = new T.Vector3(tx, ty, -tz), h = a.distanceTo(b);
+    var g = new T.ConeGeometry(h * Math.tan(angle), h, 40, 1, true); g.translate(0, -h / 2, 0);
+    var m = new T.MeshBasicMaterial({ map: beamTex, color: 0xffe9c8, transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide, fog: false });
+    var c = new T.Mesh(g, m); c.position.copy(a); c.quaternion.setFromUnitVectors(new T.Vector3(0, -1, 0), b.sub(a).normalize()); c.visible = false; c.renderOrder = 5; scene.add(c); BEAMS.push(c);
+  }
+  function spot(x, y, z, tx, ty, tz, color, intensity, angle, pen, dist, shadow, map){
+    var s = new T.SpotLight(color, intensity, dist, angle, pen, 1.2);
+    s.position.set(x, y, -z); s.target.position.set(tx, ty, -tz); scene.add(s); scene.add(s.target);
+    if (shadow) { s.castShadow = true; s.shadow.mapSize.set(map, map); s.shadow.bias = -0.0006; s.shadow.camera.near = 1; s.shadow.camera.far = dist; s.shadow.radius = 3; }
+    return s;
+  }
+  reg(spot(23.5, 6.8, 11.5, 23.5, 1.6, 19, 0xfff0dc, 1.7, 0.55, 0.7, 30, true, small ? 1024 : 2048), 1.7, 2.3);
+  reg(spot(8.5, 6.9, 9, 8.5, 0, 9, 0xffe2c0, 1.05, 1.05, 0.8, 24, !small, 1024), 1.05, 0);
+  reg(spot(37.5, 6.9, 12, 37.5, 0, 12, 0xffe2c0, 1.05, 1.05, 0.8, 24, !small, 1024), 1.05, 0);
+  reg(spot(30, 6.9, 4, 29, 0, 4.5, 0xffe2c0, 0.8, 1.0, 0.8, 22, false), 0.8, 0);
+  spot(15.5, 3.8, -4.6, 11.2, 1.4, -4.6, 0xfff0dc, 1.2, 0.7, 0.7, 12, false);
+  /* entry mode: two crossing spots onto the pelaminan and one follow spot on the entrance door */
+  [[13.5, 6.8, 6, 23.5, 1.7, 18.2, 0.2], [33.5, 6.8, 6, 23.5, 1.7, 18.2, 0.2], [33, 6.8, 9, 39, 0.9, 1.8, 0.15]].forEach(function(e){
+    reg(spot(e[0], e[1], e[2], e[3], e[4], e[5], 0xfff4e4, 0, e[6], 0.45, 34, false), 0, 2.6);
+    beam(e[0], e[1], e[2], e[3], e[4], e[5], e[6]);
+  });
+
+  /* ---------- camera ---------- */
+  var PRE = [
+    ['denah', 'Denah 3D', 'o', 22.5, 0, 3, 60, -0.5, 0.8],
+    ['atas', 'Tampak atas', 'o', 22.5, 0, 2.5, 68, 0, 1.5],
+    ['masuk', 'Pintu masuk', 'f', 39, 1.65, 0.9, 34, 1.9, 8.5, 66],
+    ['catwalk', 'Di catwalk', 'f', 37, 1.65, 4.5, 23.5, 2.4, 11, 64],
+    ['dance', 'Dance floor', 'f', 23.5, 1.75, 6.9, 23.5, 2.3, 18.5, 62],
+    ['pelaminan', 'Dari pelaminan', 'f', 23.5, 2.35, 16.9, 23.5, 1.3, 0, 72],
+    ['keluarga', 'Meja keluarga inti', 'f', 23.5, 1.3, 0.95, 23.5, 1.9, 18.5, 56],
+    ['tamu', 'Meja tamu', 'f', 34.5, 1.35, 12, 23.5, 2.5, 18, 60],
+    ['foyer', 'Foyer', 'f', 39.5, 1.65, -6, 12, 1.6, -4.6, 62]
+  ];
+  var st = { mode: 'o', tx: 22.5, ty: 0, tz: -3, dist: 60, az: -0.5, el: 0.8, px: 0, py: 1.65, pz: 0, yaw: 0, pitch: 0, fov: 60, key: 'denah' };
+  var tween = null, tmp = new T.Object3D(), v1 = new T.Vector3();
+  function pose(s){
+    if (s.mode === 'o') {
+      var ce = Math.cos(s.el);
+      tmp.position.set(s.tx + s.dist * ce * Math.sin(s.az), s.ty + s.dist * Math.sin(s.el), s.tz + s.dist * ce * Math.cos(s.az));
+      v1.set(s.tx, s.ty, s.tz);
+    } else {
+      var cp = Math.cos(s.pitch);
+      tmp.position.set(s.px, s.py, s.pz);
+      v1.set(s.px + Math.sin(s.yaw) * cp, s.py + Math.sin(s.pitch), s.pz - Math.cos(s.yaw) * cp);
+    }
+    camera.position.copy(tmp.position); camera.lookAt(v1);
+    camera.fov = s.mode === 'o' ? 38 : s.fov; camera.updateProjectionMatrix();
+  }
+  function fromPreset(p){
+    if (p[2] === 'o') return { mode: 'o', tx: p[3], ty: p[4], tz: -p[5], dist: p[6], az: p[7], el: p[8], px: 0, py: 1.65, pz: 0, yaw: 0, pitch: 0, fov: 60, key: p[0] };
+    var dx = p[6] - p[3], dy = p[7] - p[4], dz = -(p[8] - p[5]);
+    return { mode: 'f', tx: 22.5, ty: 0, tz: -3, dist: 60, az: -0.5, el: 0.8, px: p[3], py: p[4], pz: -p[5], yaw: Math.atan2(dx, -dz), pitch: Math.atan2(dy, Math.hypot(dx, dz)), fov: p[9], key: p[0] };
+  }
+  var nameEl = document.getElementById('viewName'), hintEl = document.getElementById('hint'), rail = document.getElementById('rail'), railBtns = {};
+  function syncUi(){
+    var found = null; PRE.forEach(function(p){ if (p[0] === st.key) found = p; railBtns[p[0]].setAttribute('aria-pressed', p[0] === st.key ? 'true' : 'false'); });
+    nameEl.textContent = found ? found[1] : 'Jelajah bebas';
+    hintEl.textContent = st.mode === 'o' ? 'Geser untuk memutar · cubit atau scroll untuk zoom' : 'Geser untuk melihat sekeliling · panah untuk berjalan';
+  }
+  function goTo(key, instant){
+    var p = null; PRE.forEach(function(q){ if (q[0] === key) p = q; }); if (!p) return;
+    var dest = fromPreset(p);
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (instant || reduce) { st = dest; tween = null; pose(st); syncUi(); return; }
+    var p0 = camera.position.clone(), q0 = camera.quaternion.clone(), f0 = camera.fov;
+    pose(dest); var p1 = camera.position.clone(), q1 = camera.quaternion.clone(), f1 = camera.fov;
+    camera.position.copy(p0); camera.quaternion.copy(q0); camera.fov = f0; camera.updateProjectionMatrix();
+    tween = { t: 0, p0: p0, q0: q0, f0: f0, p1: p1, q1: q1, f1: f1, dest: dest };
+    st.key = key; var keep = st; st = { mode: keep.mode, tx: keep.tx, ty: keep.ty, tz: keep.tz, dist: keep.dist, az: keep.az, el: keep.el, px: keep.px, py: keep.py, pz: keep.pz, yaw: keep.yaw, pitch: keep.pitch, fov: keep.fov, key: key };
+    syncUi();
+  }
+  PRE.forEach(function(p){
+    var b = document.createElement('button'); b.type = 'button'; b.textContent = p[1]; b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', function(){ stopTour(); goTo(p[0]); });
+    rail.appendChild(b); railBtns[p[0]] = b;
+  });
+
+  /* labels and tour toggles */
+  var showLabels = true, btnLabels = document.getElementById('btnLabels'), btnTour = document.getElementById('btnTour'), tourTimer = null, tourIdx = 0;
+  btnLabels.addEventListener('click', function(){ showLabels = !showLabels; btnLabels.setAttribute('aria-pressed', showLabels ? 'true' : 'false'); });
+  var btnBright = document.getElementById('btnBright'), btnEntry = document.getElementById('btnEntry');
+  function setLight(entry){ lmTarget = entry ? 1 : 0; btnBright.setAttribute('aria-pressed', entry ? 'false' : 'true'); btnEntry.setAttribute('aria-pressed', entry ? 'true' : 'false'); }
+  btnBright.addEventListener('click', function(){ setLight(false); });
+  btnEntry.addEventListener('click', function(){ setLight(true); });
+  function stopTour(){ if (tourTimer) { clearInterval(tourTimer); tourTimer = null; btnTour.setAttribute('aria-pressed', 'false'); } }
+  btnTour.addEventListener('click', function(){
+    if (tourTimer) { stopTour(); return; }
+    btnTour.setAttribute('aria-pressed', 'true');
+    var seq = ['denah', 'masuk', 'catwalk', 'dance', 'keluarga', 'pelaminan', 'tamu', 'foyer'];
+    tourIdx = 0; goTo(seq[0]);
+    tourTimer = setInterval(function(){ tourIdx = (tourIdx + 1) % seq.length; goTo(seq[tourIdx]); }, 7000);
+  });
+
+  /* pointer, wheel, keys */
+  var ptrs = {}, pinch = 0, keys = {};
+  function free(){ if (tween) { st = tween.dest; tween = null; } st.key = ''; syncUi(); }
+  function nudge(amount){
+    if (st.mode === 'o') st.dist = Math.max(10, Math.min(95, st.dist * Math.exp(-amount * 0.06)));
+    else { st.px += Math.sin(st.yaw) * amount; st.pz -= Math.cos(st.yaw) * amount; clampFp(); }
+  }
+  function clampFp(){ st.px = Math.max(0.6, Math.min(44.4, st.px)); st.pz = Math.max(-19.4, Math.min(14.4, st.pz)); }
+  canvas.addEventListener('pointerdown', function(e){ stopTour(); if (tween) free(); ptrs[e.pointerId] = { x: e.clientX, y: e.clientY }; try { canvas.setPointerCapture(e.pointerId); } catch (err) {} });
+  canvas.addEventListener('pointermove', function(e){
+    var p = ptrs[e.pointerId]; if (!p) return;
+    var ids = Object.keys(ptrs), dx = e.clientX - p.x, dy = e.clientY - p.y;
+    p.x = e.clientX; p.y = e.clientY;
+    if (ids.length >= 2) {
+      var a = ptrs[ids[0]], b = ptrs[ids[1]], d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (pinch) nudge((d - pinch) * 0.06);
+      pinch = d; st.key = ''; syncUi(); return;
+    }
+    if (st.mode === 'o') { st.az -= dx * 0.005; st.el = Math.max(0.12, Math.min(1.52, st.el + dy * 0.004)); }
+    else { st.yaw -= dx * 0.0042; st.pitch = Math.max(-1.2, Math.min(1.2, st.pitch + dy * 0.0036)); }
+    if (st.key) { st.key = ''; syncUi(); }
+  });
+  function drop(e){ delete ptrs[e.pointerId]; pinch = 0; }
+  canvas.addEventListener('pointerup', drop); canvas.addEventListener('pointercancel', drop);
+  canvas.addEventListener('wheel', function(e){ e.preventDefault(); stopTour(); if (tween) free(); nudge(-e.deltaY * 0.012); st.key = ''; syncUi(); }, { passive: false });
+  var keyMap = { ArrowUp: 'f', KeyW: 'f', ArrowDown: 'b', KeyS: 'b', ArrowLeft: 'l', KeyA: 'l', ArrowRight: 'r', KeyD: 'r' };
+  window.addEventListener('keydown', function(e){ var k = keyMap[e.code]; if (k && !(e.target && e.target.tagName === 'BUTTON' && false)) { keys[k] = true; stopTour(); if (e.code.indexOf('Arrow') === 0) e.preventDefault(); } });
+  window.addEventListener('keyup', function(e){ var k = keyMap[e.code]; if (k) keys[k] = false; });
+  Array.prototype.forEach.call(document.querySelectorAll('.pad button'), function(b){
+    var k = b.getAttribute('data-k');
+    var on = function(e){ e.preventDefault(); keys[k] = true; stopTour(); }, off = function(){ keys[k] = false; };
+    b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off);
+    b.addEventListener('keydown', function(e){ if (e.key === ' ' || e.key === 'Enter') { keys[k] = true; } });
+    b.addEventListener('keyup', function(){ keys[k] = false; });
+  });
+  function moveKeys(dt){
+    if (!(keys.f || keys.b || keys.l || keys.r)) return;
+    if (tween) free();
+    if (st.mode === 'o') {
+      if (keys.l) st.az -= dt * 1.0; if (keys.r) st.az += dt * 1.0;
+      if (keys.f) st.dist = Math.max(10, st.dist - dt * 22); if (keys.b) st.dist = Math.min(95, st.dist + dt * 22);
+    } else {
+      if (keys.l) st.yaw -= dt * 1.3; if (keys.r) st.yaw += dt * 1.3;
+      var mv = (keys.f ? 1 : 0) - (keys.b ? 1 : 0);
+      if (mv) { st.px += Math.sin(st.yaw) * mv * dt * 3.2; st.pz -= Math.cos(st.yaw) * mv * dt * 3.2; clampFp(); }
+    }
+    if (st.key) { st.key = ''; syncUi(); }
+  }
+
+  function resize(){
+    var w = stage.clientWidth || window.innerWidth, h = stage.clientHeight || window.innerHeight;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize); resize();
+  goTo('denah', true);
+
+  var last = performance.now(), cut = 1;
+  function frame(now){
+    var dt = Math.min(0.05, (now - last) / 1000); last = now;
+    moveKeys(dt);
+    if (tween) {
+      tween.t = Math.min(1, tween.t + dt / 1.6);
+      var k = tween.t < 0.5 ? 2 * tween.t * tween.t : 1 - Math.pow(-2 * tween.t + 2, 2) / 2;
+      camera.position.lerpVectors(tween.p0, tween.p1, k);
+      T.Quaternion.slerp(tween.q0, tween.q1, camera.quaternion, k);
+      camera.fov = tween.f0 + (tween.f1 - tween.f0) * k; camera.updateProjectionMatrix();
+      if (tween.t >= 1) { st = tween.dest; tween = null; syncUi(); }
+    } else pose(st);
+    /* above the ceiling line the walls drop to plan height and the ceiling lifts away */
+    var want = camera.position.y > 7.4 ? 1 : 0;
+    cut += (want - cut) * Math.min(1, dt * 6);
+    walls.scale.y = 1 - cut * 0.83;
+    tall.visible = cut < 0.5;
+    labels.visible = showLabels && cut > 0.5;
+    scene.fog.density = 0.0045 * (1 - cut);
+    lm += (lmTarget - lm) * Math.min(1, dt * 2.2);
+    if (Math.abs(lm - lmTarget) < 0.002) lm = lmTarget;
+    if (lm !== lmApplied) {
+      lmApplied = lm;
+      for (var li = 0; li < LS.length; li++) LS[li][0].intensity = LS[li][1] + (LS[li][2] - LS[li][1]) * lm;
+      for (var mi = 0; mi < MATS.length; mi++) MATS[mi].envMapIntensity = MATS[mi].userData.env * (1 - 0.85 * lm);
+      mLightStrip.color.copy(STRIPBASE).multiplyScalar(1 - 0.94 * lm);
+      mFix.color.copy(FIXBASE).multiplyScalar(1 - 0.97 * lm);
+      mMural.emissiveIntensity = 0.28 - 0.16 * lm; mCrystal.emissiveIntensity = 0.9 - 0.5 * lm;
+      for (var bm = 0; bm < BEAMS.length; bm++) { BEAMS[bm].material.opacity = 0.13 * lm; BEAMS[bm].visible = lm > 0.01; }
+      renderer.toneMappingExposure = 1.25 - 0.1 * lm;
+    }
+    var fl = 0.86 + 0.09 * Math.sin(now * 0.009) + 0.05 * Math.sin(now * 0.023);
+    glowMatA.opacity = fl; glowMatB.opacity = 0.9;
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</html>
