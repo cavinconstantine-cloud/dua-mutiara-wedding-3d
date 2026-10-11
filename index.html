@@ -293,7 +293,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   var glowBig = [], glowSmall = [], glowC = [];
   var PAL = (function(){
     var c = function(h){ return new T.Color(h); }, b = BLOOM;
-    return [b.clone().multiplyScalar(0.6), b.clone(), b.clone(), b.clone().multiplyScalar(1.35), b.clone().lerp(c('#c0327a'), 0.55), b.clone().lerp(c('#c0327a'), 0.3), c('#9aa858'), c('#5e6634'), c('#465028'), c('#b87a76')].map(function(x){ return x.convertSRGBToLinear(); });
+    return [b.clone().multiplyScalar(0.6), b.clone(), b.clone().multiplyScalar(1.2), c('#efe6d2'), c('#e6dcc4'), c('#6b6e3a'), c('#8f9a5a'), c('#5e6634'), c('#465028'), c('#7a8048')].map(function(x){ return x.convertSRGBToLinear(); });
   })();
   /* drapery theme florals: dusty rust, dried rose, mauve and cream, as in the references */
   var PAL2 = ['#8a4a3a', '#6b3b2e', '#a8644a', '#b98a7a', '#8c5a5e', '#70484c', '#e6d8c0', '#6f7350', '#4a2024', '#c9a78c'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); }), ai = 0;
@@ -409,9 +409,10 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   box(tall, mWall, 6.7, 3.2, -0.12, 8.7, 7, 0.12, false); box(tall, mWall, 38, 3.2, -0.12, 40, 7, 0.12, false);
   /* every ballroom wall is covered floor to ceiling in pleated fabric in the theme's olive; only the two working doors stay open */
   var mWallDrape = std(0x161514, 0.9, 0, { side: T.DoubleSide, emissive: 0xffffff, emissiveMap: upTex, emissiveIntensity: 0 });
+  var mWallDrape2 = std(0x141312, 0.9, 0, { side: T.DoubleSide, emissive: 0xffffff, emissiveMap: upTex, emissiveIntensity: 0 });
   function wallDrape(parent, x0, z0, x1, z1, y0, y1){ var d = drape(parent, mWallDrape, x0, z0, x1, z1, y0, y1); d.castShadow = false; return d; }
   wallDrape(walls, 0.3, 19.72, 17.5, 19.72, 0, 7); wallDrape(walls, 29.5, 19.72, 44.7, 19.72, 0, 7);
-  wallDrape(walls, 0.22, 0.3, 0.22, 19.7, 0, 7); wallDrape(walls, 44.78, 0.3, 44.78, 19.7, 0, 7);
+  wallDrape(walls, 0.22, 0.3, 0.22, 19.7, 0, 7).material = mWallDrape2; wallDrape(walls, 44.78, 0.3, 44.78, 19.7, 0, 7).material = mWallDrape2;
   wallDrape(walls, 0.3, 0.3, 6.6, 0.3, 0, 7); wallDrape(walls, 8.8, 0.3, 37.9, 0.3, 0, 7); wallDrape(walls, 40.1, 0.3, 44.7, 0.3, 0, 7);
   wallDrape(tall, 6.6, 0.3, 8.8, 0.3, 3.3, 7); wallDrape(tall, 37.9, 0.3, 40.1, 0.3, 3.3, 7);
   /* the two middle doors, closed */
@@ -660,25 +661,25 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   })();
 
   /* ---------- Burgundy gazebo pieces, after the JW Marriott reference: a tall burgundy pelmet, sheer inner tiers, a glowing paper-flower cloud with hanging blooms, ruched posts and lush mixed florals ---------- */
-  var glowE = [];
+  /* the gazebo dressing (pelmet, sheer tiers, paper-flower cloud, ruched posts) is shared by Olive & burgundy and Burgundy gazebo */
+  var glowE = [], gGaz = new T.Group(), mPelmet = std(0x4a1420, 0.8, 0, { side: T.DoubleSide }); scene.add(gGaz); gGaz.visible = false;
   (function(){
-    var mPelmet = std(0x4a1420, 0.8, 0, { side: T.DoubleSide });
     var mSheer = std(0x7a4634, 0.9, 0, { side: T.DoubleSide, transparent: true, opacity: 0.6, emissive: 0xff9a50, emissiveIntensity: 0.3, depthWrite: false });
     var mPaper = std(0xfff4e0, 0.8, 0, { side: T.DoubleSide, emissive: 0xffd9a0, emissiveIntensity: 0.9 });
-    var ring = function(r, h, yc, mat, pl){ var m = new T.Mesh(pleated(r, r, h, pl), mat); m.position.set(CXC, yc, -CZC); gE.add(m); return m; };
+    var ring = function(r, h, yc, mat, pl){ var m = new T.Mesh(pleated(r, r, h, pl), mat); m.position.set(CXC, yc, -CZC); gGaz.add(m); return m; };
     ring(CR + 0.06, 1.4, CH + 0.12, mPelmet, 110).castShadow = true;
     ring(3.25, 0.6, 4.0, mSheer, 80); ring(2.85, 0.55, 4.18, mSheer, 70); ring(2.4, 0.5, 4.3, mSheer, 60);
     var sh = new T.Shape();
     for (var i = 0; i <= 64; i++) { var a = i / 64 * 6.2832, r = 0.42 + 0.58 * Math.abs(Math.cos(2 * a)), x = r * Math.cos(a), y = r * Math.sin(a); if (i === 0) sh.moveTo(x, y); else sh.lineTo(x, y); }
     var clover = new T.ShapeGeometry(sh, 6); clover.rotateX(-Math.PI / 2);
-    def('petal', clover, mPaper, false, gE);
+    def('petal', clover, mPaper, false, gGaz);
     for (var c = 0; c < 520; c++) { var a1 = rnd() * 6.2832, r1 = 2.3 * Math.sqrt(rnd()), sc = 0.12 + 0.12 * rnd(); put('petal', MT(CXC + r1 * Math.cos(a1), 3.62 + rnd() * 0.4 + 0.3 * (r1 / 2.3), CZC + r1 * Math.sin(a1), (rnd() - 0.5) * 2.2, rnd() * 6, (rnd() - 0.5) * 2.2, sc, sc, sc)); }
     for (var hgi = 0; hgi < 170; hgi++) { var a2 = rnd() * 6.2832, r2 = 1.6 + 2.0 * rnd(), s2 = 0.09 + 0.06 * rnd(); put('petal', MT(CXC + r2 * Math.cos(a2), 2.55 + rnd() * 1.3, CZC + r2 * Math.sin(a2), (rnd() - 0.5) * 0.9, rnd() * 6, (rnd() - 0.5) * 0.9, s2, s2, s2)); }
     for (var ge = 0; ge < 7; ge++) glowE.push(CXC + (ge ? 1.3 * Math.cos(ge) : 0), 3.75, -(CZC + (ge ? 1.3 * Math.sin(ge) : 0)));
     /* ruched fabric posts */
     var pts = []; for (var py = 0; py <= 44; py++) pts.push(new T.Vector2(0.19 + 0.016 * Math.sin(py * 2.7) + 0.008 * Math.sin(py * 5.3), py * 0.1));
     var postGeo = new T.LatheGeometry(pts, 20);
-    POSTS.forEach(function(p){ var m = new T.Mesh(postGeo, mDrape); m.position.set(p[0], 0, -p[1]); m.castShadow = true; gE.add(m); });
+    POSTS.forEach(function(p){ var m = new T.Mesh(postGeo, mDrape); m.position.set(p[0], 0, -p[1]); m.castShadow = true; gGaz.add(m); });
     /* lush florals with grasses */
     def('flE', new T.IcosahedronGeometry(1, 1), mFlower, false, gE); def('fbE', bloomGeo, mFlowerDS, false, gE);
     var gg = new T.ConeGeometry(1, 1, 5); gg.translate(0, 0.5, 0); def('grass', gg, mFlower, false, gE);
@@ -724,7 +725,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   points(glowBigB, 2.4, gB).opacity = 0.16;
   points(glowC, 0.7, gC).opacity = 0.55;
   points(glowD, 1.5, gD).opacity = 0.22;
-  points(glowE, 3.4, gE).opacity = 0.3;
+  points(glowE, 3.4, gGaz).opacity = 0.3;
 
   /* ---------- lights ---------- */
   /* two lighting modes: every light has a "terang" level and an "entry" level, and the frame loop fades between them */
@@ -817,14 +818,14 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   btnLabels.addEventListener('click', function(){ showLabels = !showLabels; btnLabels.setAttribute('aria-pressed', showLabels ? 'true' : 'false'); });
   /* decor theme switch: recolours shared fabric, floors, chairs and flowers, and shows each theme's own pieces */
   var themeI = 0, themeB = false, themeC = false, themeD = false, themeE = false, selTheme = document.getElementById('selTheme');
-  var THEME = [[mWallDrape, 0x161514, 0x9c8160, 0xb3a586, 0xcdb89a, 0x0c0b0b], [mDrape, 0x5a5c3a, 0xa98c68, 0xbcae8e, 0x4a1028, 0x3a1218], [mBurg, 0x6e1423, 0xb89c78, 0xcbbd9c, 0xcdb89a, 0x4a1420], [mCloth, CLOTH.getHex(), 0xb39c7c, 0xc2b494, 0x2c4124, 0xcdb89a], [mRunner, 0x6e1423, 0x8f6f58, 0x55602f, 0x5a1230, 0x5a1230], [mChair, 0x15120f, 0xb39256, 0x3a2a1c, 0x3a1a12, 0x15120f], [mGloss, 0x070707, 0xefe8da, 0xefe8da, 0x4a1028, 0x050505], [mPost, 0x2a211a, 0xb39256, 0xcbbd9c, 0x5a4632, 0x1a1010], [mGlass, 0xffffff, 0xffc27a, 0xffd9a0, 0xffc27a, 0xffc27a], [mSwag, 0xb89c78, 0xb89c78, 0xcfc2a2, 0xcdb89a, 0x4a1420], [mCush, 0xe9e1d0, 0xe9e1d0, 0xe9e1d0, 0xcdb89a, 0xe9e1d0], [mDance, 0x070707, 0xefe8da, 0xefe8da, 0xcdb89a, 0x040404], [mDance2, 0x070707, 0xefe8da, 0xefe8da, 0x5a4632, 0x040404], [mIvory, 0xf2ead8, 0xf2ead8, 0xf2ead8, 0x9a7650, 0xf2ead8]];
+  var THEME = [[mWallDrape, 0x4f5232, 0x9c8160, 0xb3a586, 0xcdb89a, 0x0c0b0b], [mDrape, 0x5a5c3a, 0xa98c68, 0xbcae8e, 0x4a1028, 0x3a1218], [mBurg, 0x55582f, 0xb89c78, 0xcbbd9c, 0xcdb89a, 0x4a1420], [mCloth, CLOTH.getHex(), 0xb39c7c, 0xc2b494, 0x2c4124, 0xcdb89a], [mRunner, 0x6e1423, 0x8f6f58, 0x55602f, 0x5a1230, 0x5a1230], [mChair, 0x15120f, 0xb39256, 0x3a2a1c, 0x3a1a12, 0x15120f], [mGloss, 0x070707, 0xefe8da, 0xefe8da, 0x4a1028, 0x050505], [mPost, 0x2a211a, 0xb39256, 0xcbbd9c, 0x5a4632, 0x1a1010], [mGlass, 0xffffff, 0xffc27a, 0xffd9a0, 0xffc27a, 0xffc27a], [mSwag, 0xb89c78, 0xb89c78, 0xcfc2a2, 0xcdb89a, 0x4a1420], [mCush, 0xe9e1d0, 0xe9e1d0, 0xe9e1d0, 0xcdb89a, 0xe9e1d0], [mDance, 0x070707, 0xefe8da, 0xefe8da, 0xcdb89a, 0x040404], [mDance2, 0x070707, 0xefe8da, 0xefe8da, 0x5a4632, 0x040404], [mIvory, 0xf2ead8, 0xf2ead8, 0xf2ead8, 0x9a7650, 0xf2ead8], [mPelmet, 0x55582f, 0x4a1420, 0x4a1420, 0x4a1420, 0x4a1420], [mWallDrape2, 0x141312, 0x9c8160, 0xb3a586, 0xcdb89a, 0x0c0b0b]];
   var TH = { chairM: [0.1, 0.75, 0.15, 0.2, 0.1], chairR: [0.42, 0.35, 0.5, 0.25, 0.42], postM: [0.5, 0.8, 0.1, 0.85, 0.3], glossR: [0.2, 0.14, 0.14, 0.2, 0.08], glossE: [0.55, 0.9, 0.9, 0.45, 0.4], glass: [0.22, 0.38, 0.34, 0.34, 0.34], hemi: [0xffe6c8, 0xffd9a8, 0xffe2b8, 0xffe0bc, 0xffdcc0] };
   function applyTheme(i){
     themeI = i; themeB = i === 1; themeC = i === 2; themeD = i === 3; themeE = i === 4;
     THEME.forEach(function(t){ t[0].color.setHex(t[1 + i]).convertSRGBToLinear(); });
     mChair.metalness = TH.chairM[i]; mChair.roughness = TH.chairR[i]; mPost.metalness = TH.postM[i];
     mGloss.roughness = TH.glossR[i]; mGloss.userData.env = TH.glossE[i]; mDance.roughness = [0.2, 0.14, 0.14, 0.3, 0.08][i]; mDance.userData.env = [0.55, 0.9, 0.9, 0.5, 0.4][i]; mDance2.roughness = [0.2, 0.14, 0.14, 0.35, 0.12][i]; mDance2.metalness = themeD ? 0.7 : 0; mDance2.userData.env = [0.55, 0.9, 0.9, 0.8, 0.4][i]; mGlass.opacity = TH.glass[i];
-    gA.visible = i === 0; gB.visible = themeB; gC.visible = themeC; gD.visible = themeD; mIvory.metalness = themeD ? 0.6 : 0; gE.visible = themeE; gChand.visible = !themeE; if (canopyValance) canopyValance.visible = !themeE; mirrors.forEach(function(r){ r.visible = (i === 0 || themeE); });
+    gA.visible = i === 0; gB.visible = themeB; gC.visible = themeC; gD.visible = themeD; mIvory.metalness = themeD ? 0.6 : 0; gE.visible = themeE; var gz = (i === 0 || themeE); gGaz.visible = gz; gChand.visible = !gz; if (canopyValance) canopyValance.visible = !gz; mirrors.forEach(function(r){ r.visible = (i === 0 || themeE); });
     ['fl', 'fb'].forEach(function(key){
       var d = inst[key], src = [d.c, d.c2, d.c3, d.c4, d.c5][i];
       if (d.mesh) { for (var k = 0; k < src.length; k++) d.mesh.setColorAt(k, src[k]); d.mesh.instanceColor.needsUpdate = true; }
@@ -973,7 +974,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   }
   window.addEventListener('resize', resize); resize();
   goTo('denah', true);
-  applyTheme(4);
+  applyTheme(0);
 
   var last = performance.now(), cut = 1;
   function frame(now){
@@ -1004,7 +1005,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
       mLightStrip.color.copy(STRIPBASE).multiplyScalar((1 - 0.94 * lm) * (themeC ? 0.25 : themeE ? 0.5 : 1));
       mFix.color.copy(FIXBASE).multiplyScalar((1 - 0.97 * lm) * (themeC ? 0.25 : themeE ? 0.5 : 1));
       mMural.emissiveIntensity = 0.28 - 0.16 * lm; mCrystal.emissiveIntensity = 0.9 - 0.5 * lm;
-      mWallDrape.emissiveIntensity = (themeB ? 0.5 : themeC ? 0.38 : themeD ? 0.2 : 0) * (1 - 0.5 * lm); mDrape.emissiveIntensity = (themeB ? 0.45 : themeC ? 0.42 : themeD ? 0.12 : themeE ? 0.5 : 0) * (1 - 0.4 * lm);
+      mWallDrape.emissiveIntensity = (themeI === 0 ? 0.16 : themeB ? 0.5 : themeC ? 0.38 : themeD ? 0.2 : 0) * (1 - 0.5 * lm); mWallDrape2.emissiveIntensity = themeI === 0 ? 0 : mWallDrape.emissiveIntensity; mDrape.emissiveIntensity = (themeB ? 0.45 : themeC ? 0.42 : themeD ? 0.12 : themeE ? 0.5 : 0) * (1 - 0.4 * lm);
       mShade.emissiveIntensity = 0.9 - 0.4 * lm;
       var bo = Math.max(lm, (themeC || themeE) ? 0.5 : 0); for (var bm = 0; bm < BEAMS.length; bm++) { BEAMS[bm].material.opacity = 0.13 * bo; BEAMS[bm].visible = bo > 0.01; }
       renderer.toneMappingExposure = 1.25 - 0.1 * lm;
