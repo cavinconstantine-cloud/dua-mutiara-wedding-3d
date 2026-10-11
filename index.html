@@ -425,18 +425,18 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   mound(37.5, 0, 1.5, 0.42, 0.8, 0.5, 70); mound(40.5, 0, 1.5, 0.42, 0.8, 0.5, 70); mound(40.5, 0, 4.6, 0.42, 0.8, 0.5, 70);
 
   /* canopy */
-  var CX0 = 20.1, CX1 = 26.9, CZ0 = 6, CZ1 = 12, CH = 4.55, mPost = std(0x2a211a, 0.4, 0.5);
-  [[CX0, CZ0], [CX1, CZ0], [CX0, CZ1], [CX1, CZ1]].forEach(function(p){ box(scene, mPost, p[0] - 0.08, 0, p[1] - 0.08, p[0] + 0.08, CH, p[1] + 0.08); mound(p[0], 0, p[1], 0.45, 0.9, 0.45, 60); });
-  box(scene, mPost, CX0, CH, CZ0 - 0.08, CX1, CH + 0.16, CZ0 + 0.08); box(scene, mPost, CX0, CH, CZ1 - 0.08, CX1, CH + 0.16, CZ1 + 0.08);
-  box(scene, mPost, CX0 - 0.08, CH, CZ0, CX0 + 0.08, CH + 0.16, CZ1); box(scene, mPost, CX1 - 0.08, CH, CZ0, CX1 + 0.08, CH + 0.16, CZ1);
+  /* round gazebo: six posts on a ring beam, a sagging round fabric roof and a pleated circular valance */
+  var CR = 3.6, CH = 4.55, CXC = 23.5, CZC = 9, mPost = std(0x2a211a, 0.4, 0.5), POSTS = [];
+  for (var pa = 0; pa < 6; pa++) { var pang = pa / 6 * 6.2832; POSTS.push([CXC + CR * Math.cos(pang), CZC + CR * Math.sin(pang), Math.cos(pang), Math.sin(pang)]); }
+  POSTS.forEach(function(p){ cyl(scene, mPost, p[0], p[1], 0.07, 0, CH, 12); mound(p[0], 0, p[1], 0.42, 0.85, 0.42, 50); });
+  (function(){ var t = new T.Mesh(new T.TorusGeometry(CR, 0.08, 10, 96), mPost); t.rotation.x = Math.PI / 2; t.position.set(CXC, CH + 0.08, -CZC); t.castShadow = true; scene.add(t); })();
   (function(){
-    var g = new T.PlaneGeometry(CX1 - CX0, CZ1 - CZ0, 40, 40), p = g.attributes.position, hw = (CX1 - CX0) / 2, hd = (CZ1 - CZ0) / 2;
-    for (var i = 0; i < p.count; i++) { var u = p.getX(i) / hw, v = p.getY(i) / hd; p.setZ(i, -0.55 * Math.cos(u * 1.5708) * Math.cos(v * 1.5708) + 0.035 * Math.sin(u * 30) * Math.cos(v * 1.5708)); }
+    var g = new T.RingGeometry(0.01, CR, 96, 18), p = g.attributes.position;
+    for (var i = 0; i < p.count; i++) { var x = p.getX(i), y = p.getY(i), r = Math.hypot(x, y) / CR; p.setZ(i, -0.55 * Math.cos(r * 1.5708) + 0.03 * r * Math.sin(Math.atan2(y, x) * 36)); }
     g.computeVertexNormals();
-    var m = new T.Mesh(g, mBurg); m.rotation.x = -Math.PI / 2; m.position.set(23.5, CH + 0.08, -9); m.castShadow = true; scene.add(m);
+    var m = new T.Mesh(g, mBurg); m.rotation.x = -Math.PI / 2; m.position.set(CXC, CH + 0.1, -CZC); m.castShadow = true; scene.add(m);
+    var v = new T.Mesh(pleated(CR, CR, 0.62, 90), mBurg); v.position.set(CXC, CH - 0.26, -CZC); v.castShadow = true; scene.add(v);
   })();
-  drape(scene, mBurg, CX0, CZ0, CX1, CZ0, CH - 0.6, CH); drape(scene, mBurg, CX0, CZ1, CX1, CZ1, CH - 0.6, CH);
-  drape(scene, mBurg, CX0, CZ0, CX0, CZ1, CH - 0.6, CH); drape(scene, mBurg, CX1, CZ0, CX1, CZ1, CH - 0.6, CH);
 
   function chandelier(parent, key, x, y, z, s, top, intensity, dist){
     var rr = [1.0, 0.7, 0.4], yy = [0.35, 0, -0.32], nn = [20, 14, 8];
@@ -591,9 +591,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   [25.4, 28.4, 31.4, 34.4].forEach(function(x){ shade(gB, x, 2.55, 0, 0.2, 0.6, 1.5); });
   shade(gB, 20.2, 15.3, 0, 0.2, 0.62, 1.7); shade(gB, 26.8, 15.3, 0, 0.2, 0.62, 1.7);
   shade(gB, 11.7, -4.6, 0, 0.1, 1.5, 3.3); shade(gB, 12.9, -7.3, 0, 0.18, 0.55, 1.5); shade(gB, 12.9, -1.9, 0, 0.18, 0.55, 1.5);
-  [[CX0, CZ0, 1, 1], [CX1, CZ0, -1, 1], [CX0, CZ1, 1, -1], [CX1, CZ1, -1, -1]].forEach(function(c){
-    drape(gB, mDrape, c[0], c[1], c[0] + c[2] * 0.9, c[1], 0, CH - 0.6); drape(gB, mDrape, c[0], c[1], c[0], c[1] + c[3] * 0.9, 0, CH - 0.6);
-  });
+  POSTS.forEach(function(p){ drape(gB, mDrape, p[0] - p[3] * 0.5, p[1] + p[2] * 0.5, p[0] + p[3] * 0.5, p[1] - p[2] * 0.5, 0, CH - 0.6); });
   (function(){
     var g = new T.PlaneGeometry(12, 4.2, 140, 20), p = g.attributes.position;
     for (var i = 0; i < p.count; i++) { var u = (p.getX(i) + 6) / 12 * 4, f = u - Math.floor(u), v = (p.getY(i) + 2.1) / 4.2; p.setZ(i, -0.8 * Math.sin(Math.PI * f) * (0.5 + 0.5 * Math.sin(Math.PI * v)) + 0.03 * Math.sin(p.getY(i) * 26)); }
