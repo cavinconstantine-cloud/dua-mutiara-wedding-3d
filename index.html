@@ -58,6 +58,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
           <option value="1">Drapery champagne</option>
           <option value="2">Ivory garden</option>
           <option value="3">Sasa's reference</option>
+          <option value="4">Burgundy gazebo</option>
         </select>
       </label>
       <button type="button" id="btnBright" aria-pressed="true">Lampu terang</button>
@@ -85,6 +86,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/objects/Reflector.js"></script>
 <script>
 (function(){
   var T = window.THREE, stage = document.getElementById('stage');
@@ -126,7 +128,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   function canvasTex(w, h, draw, rep){
     var c = document.createElement('canvas'); c.width = w; c.height = h;
     draw(c.getContext('2d'), w, h);
-    var t = new T.CanvasTexture(c); t.encoding = T.sRGBEncoding; t.anisotropy = 4;
+    var t = new T.CanvasTexture(c); t.encoding = T.sRGBEncoding; t.anisotropy = 8;
     if (rep) { t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(rep[0], rep[1]); }
     return t;
   }
@@ -146,6 +148,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   scene.add(gA); scene.add(gB); scene.add(gBTall); gB.visible = false; gBTall.visible = false;
   var gC = new T.Group(), gCTall = new T.Group(); scene.add(gC); scene.add(gCTall); gC.visible = false; gCTall.visible = false;
   var gD = new T.Group(); scene.add(gD); gD.visible = false;
+  var gE = new T.Group(), gChand = new T.Group(); scene.add(gE); scene.add(gChand); gE.visible = false;
 
   function box(parent, mat, x0, y0, z0, x1, y1, z1, cast){
     var m = new T.Mesh(new T.BoxGeometry(Math.abs(x1 - x0), y1 - y0, Math.abs(z1 - z0)), mat);
@@ -176,7 +179,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   }
   /* instancing collector */
   var inst = {};
-  function def(key, geo, mat, cast, parent){ inst[key] = { geo: geo, mat: mat, m: [], c: [], c2: [], c3: [], c4: [], cast: cast !== false, parent: parent || scene }; }
+  function def(key, geo, mat, cast, parent){ inst[key] = { geo: geo, mat: mat, m: [], c: [], c2: [], c3: [], c4: [], c5: [], cast: cast !== false, parent: parent || scene }; }
   var _q = new T.Quaternion(), _e = new T.Euler(), _p = new T.Vector3(), _s = new T.Vector3();
   function M(x, y, z, ry, sx, sy, sz){
     _e.set(0, ry || 0, 0); _q.setFromEuler(_e); _p.set(x, y, -z); _s.set(sx, sy, sz);
@@ -186,7 +189,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     _q.set(0, 0, 0, 1); _p.set(lx, ly, lz); _s.set(sx, sy, sz);
     return new T.Matrix4().compose(_p, _q, _s);
   }
-  function put(key, mat, color, color2, color3, color4){ var d = inst[key]; d.m.push(mat); if (color) d.c.push(color); if (color2) d.c2.push(color2); if (color3) d.c3.push(color3); if (color4) d.c4.push(color4); }
+  function put(key, mat, color, color2, color3, color4, color5){ var d = inst[key]; d.m.push(mat); if (color) d.c.push(color); if (color2) d.c2.push(color2); if (color3) d.c3.push(color3); if (color4) d.c4.push(color4); if (color5) d.c5.push(color5); }
   function MT(x, y, z, rx, ry, rz, sx, sy, sz){ _e.set(rx, ry, rz); _q.setFromEuler(_e); _p.set(x, y, -z); _s.set(sx, sy, sz); return new T.Matrix4().compose(_p, _q, _s); }
   function flush(){
     for (var k in inst) {
@@ -200,20 +203,26 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
 
   /* ---------- materials ---------- */
   var BLOOM = new T.Color('#7A1628'), CLOTH = new T.Color('#6B6535');
-  var mCarpet = std(0xb4a69e, 0.92, 0, { map: canvasTex(512, 512, function(g, w, h){
-    /* hotel carpet from the ballroom photo: terracotta red ground, cream and gold floral lattice */
-    g.fillStyle = '#74301f'; g.fillRect(0, 0, w, h);
-    for (var i = 0; i < 5000; i++) { g.fillStyle = 'rgba(' + (90 + rnd() * 70 | 0) + ',' + (30 + rnd() * 34 | 0) + ',' + (18 + rnd() * 24 | 0) + ',0.5)'; g.fillRect(rnd() * w, rnd() * h, 2, 2); }
-    for (var f = 0; f < 260; f++) { g.fillStyle = 'rgba(226,198,140,' + (0.25 + rnd() * 0.35) + ')'; g.beginPath(); g.arc(rnd() * w, rnd() * h, 2 + rnd() * 4, 0, 6.2832); g.fill(); }
-    g.strokeStyle = 'rgba(92,30,20,0.7)'; g.lineWidth = 6; g.strokeRect(0, 0, w, h); g.strokeRect(0, 0, w / 2, h / 2); g.strokeRect(w / 2, h / 2, w / 2, h / 2);
-    g.strokeStyle = 'rgba(220,188,128,0.6)'; g.lineWidth = 3;
-    for (var a = 0; a < 2; a++) for (var b = 0; b < 2; b++) {
-      var cx = a * 256 + 128, cy = b * 256 + 128;
-      g.beginPath(); g.moveTo(cx, cy - 104); g.quadraticCurveTo(cx + 44, cy - 44, cx + 104, cy); g.quadraticCurveTo(cx + 44, cy + 44, cx, cy + 104); g.quadraticCurveTo(cx - 44, cy + 44, cx - 104, cy); g.quadraticCurveTo(cx - 44, cy - 44, cx, cy - 104); g.stroke();
-      g.beginPath(); g.arc(cx, cy, 30, 0, 6.2832); g.stroke();
-      g.fillStyle = 'rgba(230,202,146,0.6)'; g.beginPath(); g.arc(cx, cy, 12, 0, 6.2832); g.fill();
-    }
-  }, [11.25, 5]) });
+  /* the ballroom's current carpet, from the photo: orange-red ground with blue leaves, cream outlines and scrolling vines */
+  var mCarpet = std(0xc4bcb6, 0.94, 0, { map: canvasTex(1024, 1024, function(g, w, h){
+    g.fillStyle = '#b5482a'; g.fillRect(0, 0, w, h);
+    for (var i = 0; i < 16000; i++) { var k = rnd(); g.fillStyle = k < 0.5 ? 'rgba(214,104,48,0.5)' : k < 0.8 ? 'rgba(150,44,28,0.5)' : 'rgba(226,170,110,0.45)'; g.fillRect(rnd() * w, rnd() * h, 3, 3); }
+    var wrap = function(x, y, fn){ for (var ox = -1; ox <= 1; ox++) for (var oy = -1; oy <= 1; oy++) { g.save(); g.translate(x + ox * w, y + oy * h); fn(); g.restore(); } };
+    for (var v = 0; v < 14; v++) (function(){
+      var x = rnd() * w, y = rnd() * h, rot = rnd() * 6.28, sc = 0.8 + rnd() * 0.8;
+      wrap(x, y, function(){ g.rotate(rot); g.scale(sc, sc); g.strokeStyle = 'rgba(232,150,84,0.9)'; g.lineWidth = 9; g.lineCap = 'round'; g.beginPath(); g.moveTo(-150, 0); g.bezierCurveTo(-70, -110, 60, 110, 150, 0); g.stroke(); g.strokeStyle = 'rgba(132,36,24,0.8)'; g.lineWidth = 3; g.stroke(); g.beginPath(); g.arc(150, -26, 26, 0.5, 5.2); g.strokeStyle = 'rgba(232,150,84,0.9)'; g.lineWidth = 7; g.stroke(); });
+    })();
+    var blues = ['#5f7da8', '#7d98bd', '#3f5a86', '#93aacb'];
+    for (var l = 0; l < 30; l++) (function(){
+      var x = rnd() * w, y = rnd() * h, rot = rnd() * 6.28, sc = 0.7 + rnd() * 0.9, col = blues[(rnd() * 4) | 0];
+      wrap(x, y, function(){ g.rotate(rot); g.scale(sc, sc); g.beginPath(); g.moveTo(-70, 0); g.bezierCurveTo(-30, -44, 40, -40, 78, 0); g.bezierCurveTo(40, 36, -30, 40, -70, 0); g.fillStyle = col; g.fill(); g.strokeStyle = 'rgba(232,214,176,0.9)'; g.lineWidth = 4; g.stroke(); g.beginPath(); g.moveTo(-60, 0); g.lineTo(66, 0); g.strokeStyle = 'rgba(40,56,92,0.7)'; g.lineWidth = 2.5; g.stroke(); });
+    })();
+    for (var f = 0; f < 12; f++) (function(){
+      var x = rnd() * w, y = rnd() * h, r = 26 + rnd() * 22;
+      wrap(x, y, function(){ for (var q = 0; q < 6; q++) { g.beginPath(); g.arc(Math.cos(q * 1.047) * r * 0.6, Math.sin(q * 1.047) * r * 0.6, r * 0.55, 0, 6.2832); g.fillStyle = 'rgba(142,40,26,0.9)'; g.fill(); g.strokeStyle = 'rgba(236,180,120,0.9)'; g.lineWidth = 3; g.stroke(); } g.beginPath(); g.arc(0, 0, r * 0.4, 0, 6.2832); g.fillStyle = '#7d98bd'; g.fill(); });
+    })();
+    for (var n = 0; n < 9000; n++) { g.fillStyle = 'rgba(0,0,0,' + (rnd() * 0.12) + ')'; g.fillRect(rnd() * w, rnd() * h, 2, 2); }
+  }, [9, 4]) });
   var mMarble = std(0xffffff, 0.28, 0, { map: canvasTex(512, 512, function(g, w, h){
     g.fillStyle = '#b6a48c'; g.fillRect(0, 0, w, h);
     for (var i = 0; i < 40; i++) { g.strokeStyle = 'rgba(' + (rnd() < 0.5 ? '236,224,204' : '120,100,80') + ',' + (0.12 + rnd() * 0.2) + ')'; g.lineWidth = 1 + rnd() * 2; g.beginPath(); var x = rnd() * w, y = rnd() * h; g.moveTo(x, y); for (var j = 0; j < 5; j++) { x += (rnd() - 0.5) * 160; y += (rnd() - 0.5) * 160; g.lineTo(x, y); } g.stroke(); }
@@ -270,7 +279,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   })();
   def('wax', UC, mWax, false); def('flame', new T.SphereGeometry(1, 8, 6), mFlame, false); def('hurr', new T.CylinderGeometry(1, 1, 1, 16, 1, true), mGlass, false);
   def('leaf', new T.IcosahedronGeometry(1, 0), mFlower, false, gC);
-  def('crystal', new T.OctahedronGeometry(1, 0), mCrystal, false);
+  def('crystal', new T.OctahedronGeometry(1, 0), mCrystal, false, gChand);
   def('crystalTall', new T.OctahedronGeometry(1, 0), mCrystal, false, tall);
   def('down', new T.CylinderGeometry(1, 1, 1, 12), mLightStrip, false, tall);
   (function(){
@@ -297,14 +306,16 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
       if (d > 1) { var k = rnd() / Math.sqrt(d); u *= k; w *= k; }
       var t = 1 - (u * u + w * w), y = y0 + 0.05 + h * t * (0.25 + 0.75 * rnd()), s = 0.04 + 0.055 * rnd();
       var ci = (rnd() * PAL.length) | 0, ck = 0.5 + 0.45 * rnd();
-      var c1 = PAL[ci].clone().multiplyScalar(ck), c2 = PAL2[ci].clone().multiplyScalar(ck + 0.05), c3 = PAL3[ci].clone().multiplyScalar(ck + 0.1), c4 = PAL4[ci].clone().multiplyScalar(ck + 0.15);
-      if (rnd() < 0.62) { var bs = s * 1.3; put('fb', MT(cx + u * rx, y, cz + w * rz, (rnd() - 0.5) * 1.5, rnd() * 6, (rnd() - 0.5) * 1.5, bs, bs, bs), c1, c2, c3, c4); }
-      else put('fl', M(cx + u * rx, y, cz + w * rz, rnd() * 6, s, s * (0.6 + 0.35 * rnd()), s), c1, c2, c3, c4);
+      var c1 = PAL[ci].clone().multiplyScalar(ck), c2 = PAL2[ci].clone().multiplyScalar(ck + 0.05), c3 = PAL3[ci].clone().multiplyScalar(ck + 0.1), c4 = PAL4[ci].clone().multiplyScalar(ck + 0.15), c5 = PAL5[ci].clone().multiplyScalar(ck + 0.2);
+      if (rnd() < 0.62) { var bs = s * 1.3; put('fb', MT(cx + u * rx, y, cz + w * rz, (rnd() - 0.5) * 1.5, rnd() * 6, (rnd() - 0.5) * 1.5, bs, bs, bs), c1, c2, c3, c4, c5); }
+      else put('fl', M(cx + u * rx, y, cz + w * rz, rnd() * 6, s, s * (0.6 + 0.35 * rnd()), s), c1, c2, c3, c4, c5);
     }
   }
   /* tall foliage centrepiece on a slim gold stem, for the ivory garden theme */
   /* Sasa's reference: champagne walls, moss tables, crimson backdrop and floors, with champagne, tortoiseshell and bronze as accents */
   var PAL4 = ['#5a1230', '#6e1a3a', '#7a1f40', '#3f0c22', '#cdb89a', '#e0cfb2', '#3f5a2a', '#8f9c78', '#56663a', '#5a1230'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); });
+  /* Burgundy gazebo: burgundy and deep red with pink, peach, soft yellow, green hydrangea and cream */
+  var PAL5 = ['#6e1423', '#8a1c2c', '#b02a34', '#e8a0b4', '#f2b98a', '#f0c05a', '#8fb04a', '#5e7a34', '#f3e6cc', '#b98aa0'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); });
   var LEAF = ['#56602f', '#3d4a26', '#6f7d3c', '#8a9a50'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); }), LEAFW = new T.Color('#f4eedd').convertSRGBToLinear();
   function tree(x, z){
     cyl(gC, mGold, x, z, 0.022, 0.76, 2.35, 6, false);
@@ -362,7 +373,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   var floor = new T.Mesh(new T.PlaneGeometry(45, 20), mCarpet);
   floor.rotation.x = -Math.PI / 2; floor.position.set(22.5, 0, -10); floor.receiveShadow = true; scene.add(floor);
   var ground = new T.Mesh(new T.PlaneGeometry(300, 300), std(0x0b0807, 1));
-  ground.rotation.x = -Math.PI / 2; ground.position.set(22.5, -0.03, 0); scene.add(ground);
+  ground.rotation.x = -Math.PI / 2; ground.position.set(22.5, -0.6, 0); scene.add(ground);
   (function(){
     var s = new T.Shape(); s.moveTo(2, 0); s.lineTo(45, 0); s.lineTo(45, -15); s.lineTo(36, -15); s.lineTo(2, -5); s.closePath();
     var f = new T.Mesh(new T.ShapeGeometry(s), mMarble); f.rotation.x = -Math.PI / 2; f.position.y = 0.001; f.receiveShadow = true; scene.add(f);
@@ -377,10 +388,15 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     var cf = new T.Mesh(new T.PlaneGeometry(11, 12), mCoffer); cf.rotation.x = Math.PI / 2; cf.position.set(x, 6.99, -10); tall.add(cf);
     box(tall, mLightStrip, x - 5.5, 6.88, 3.95, x + 5.5, 6.97, 4.07, false); box(tall, mLightStrip, x - 5.5, 6.88, 15.93, x + 5.5, 6.97, 16.05, false);
     box(tall, mLightStrip, x - 5.56, 6.88, 4, x - 5.44, 6.97, 16, false); box(tall, mLightStrip, x + 5.44, 6.88, 4, x + 5.56, 6.97, 16, false);
-    box(tall, mBeam, x - 1.75, 6.72, 8.75, x + 1.75, 6.98, 11.25, false);
-    box(tall, mFix, x - 1.6, 6.56, 8.9, x + 1.6, 6.72, 11.1, false);
-    for (var q = 1; q < 4; q++) box(tall, mBeam, x - 1.6 + q * 0.8 - 0.02, 6.545, 8.9, x - 1.6 + q * 0.8 + 0.02, 6.56, 11.1, false);
-    box(tall, mBeam, x - 1.6, 6.545, 9.98, x + 1.6, 6.56, 10.02, false);
+    if (!mFix.map) { mFix.map = canvasTex(256, 128, function(g, w, h){ g.fillStyle = '#ffffff'; g.fillRect(0, 0, w, h); g.strokeStyle = '#3a2a1c'; g.lineWidth = 6; for (var i = 0; i <= 4; i++) { g.beginPath(); g.moveTo(i * 64, 0); g.lineTo(i * 64, h); g.stroke(); } g.beginPath(); g.moveTo(0, 64); g.lineTo(w, 64); g.stroke(); g.strokeRect(0, 0, w, h); }, [4, 1]); }
+    (function(){
+      var g1 = new T.CylinderGeometry(1, 0.74, 0.55, 8); g1.rotateY(Math.PI / 8);
+      var fx = new T.Mesh(g1, mFix); fx.scale.set(2.7, 1, 1.9); fx.position.set(x, 6.45, -10); tall.add(fx);
+      var g2 = new T.CylinderGeometry(1.07, 1.07, 0.16, 8); g2.rotateY(Math.PI / 8);
+      var fr = new T.Mesh(g2, mBeam); fr.scale.set(2.7, 1, 1.9); fr.position.set(x, 6.8, -10); tall.add(fr);
+      for (var q = -2; q <= 2; q++) box(tall, mBeam, x + q * 0.66 - 0.02, 6.16, 8.75, x + q * 0.66 + 0.02, 6.18, 11.25, false);
+      for (var q2 = -1; q2 <= 1; q2++) box(tall, mBeam, x - 1.9, 6.16, 10 + q2 * 0.62 - 0.02, x + 1.9, 6.18, 10 + q2 * 0.62 + 0.02, false);
+    })();
     var fp = new T.PointLight(0xffd9a8, 0.75, 24, 1.6); fp.position.set(x, 6.2, -10); scene.add(fp); fixLights.push(fp);
   });
   for (var di = 0; di < 18; di++) for (var dj = 0; dj < 8; dj++) put('down', M(1.25 + di * 2.5, 6.985, 1.25 + dj * 2.5, 0, 0.07, 0.02, 0.07));
@@ -426,7 +442,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
 
   /* canopy */
   /* round gazebo: six posts on a ring beam, a sagging round fabric roof and a pleated circular valance */
-  var CR = 3.6, CH = 4.55, CXC = 23.5, CZC = 9, mPost = std(0x2a211a, 0.4, 0.5), POSTS = [];
+  var canopyValance = null, CR = 3.6, CH = 4.55, CXC = 23.5, CZC = 9, mPost = std(0x2a211a, 0.4, 0.5), POSTS = [];
   for (var pa = 0; pa < 6; pa++) { var pang = pa / 6 * 6.2832; POSTS.push([CXC + CR * Math.cos(pang), CZC + CR * Math.sin(pang), Math.cos(pang), Math.sin(pang)]); }
   POSTS.forEach(function(p){ cyl(scene, mPost, p[0], p[1], 0.07, 0, CH, 12); mound(p[0], 0, p[1], 0.42, 0.85, 0.42, 50); });
   (function(){ var t = new T.Mesh(new T.TorusGeometry(CR, 0.08, 10, 96), mPost); t.rotation.x = Math.PI / 2; t.position.set(CXC, CH + 0.08, -CZC); t.castShadow = true; scene.add(t); })();
@@ -435,7 +451,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     for (var i = 0; i < p.count; i++) { var x = p.getX(i), y = p.getY(i), r = Math.hypot(x, y) / CR; p.setZ(i, -0.55 * Math.cos(r * 1.5708) + 0.03 * r * Math.sin(Math.atan2(y, x) * 36)); }
     g.computeVertexNormals();
     var m = new T.Mesh(g, mBurg); m.rotation.x = -Math.PI / 2; m.position.set(CXC, CH + 0.1, -CZC); m.castShadow = true; scene.add(m);
-    var v = new T.Mesh(pleated(CR, CR, 0.62, 90), mBurg); v.position.set(CXC, CH - 0.26, -CZC); v.castShadow = true; scene.add(v);
+    var v = new T.Mesh(pleated(CR, CR, 0.62, 90), mBurg); v.position.set(CXC, CH - 0.26, -CZC); v.castShadow = true; scene.add(v); canopyValance = v;
   })();
 
   function chandelier(parent, key, x, y, z, s, top, intensity, dist){
@@ -452,7 +468,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     var pl = new T.PointLight(0xffc68a, intensity, dist, 1.6); pl.position.set(x, y - 0.1, -z); scene.add(pl);
     return pl;
   }
-  var canopyLight = chandelier(scene, 'crystal', 23.5, 3.2, 9, 0.85, 4.1, 1.25, 14);
+  var canopyLight = chandelier(gChand, 'crystal', 23.5, 3.2, 9, 0.85, 4.1, 1.25, 14);
   chandelier(tall, 'crystalTall', 24.5, 3.2, -5, 0.6, 4, 0.9, 13);
   chandelier(tall, 'crystalTall', 34, 3.2, -7.5, 0.6, 4, 0.9, 13);
 
@@ -571,7 +587,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   function arc(cx, cz, R, a0){
     var m = new T.Mesh(new T.CylinderGeometry(R, R, 2.3, 28, 1, true, (a0 + 90) * Math.PI / 180, Math.PI / 2), mCream);
     m.position.set(cx, 1.15, -cz); m.castShadow = true; m.receiveShadow = true; scene.add(m);
-    for (var i = 0; i < 90; i++) { var a = (a0 + rnd() * 90) * Math.PI / 180, top = rnd() < 0.6, s = 0.07 + rnd() * 0.08; put('fl', M(cx + R * Math.cos(a), top ? 2.3 + rnd() * 0.22 : 0.08 + rnd() * 0.3, cz + R * Math.sin(a) + (top ? 0 : (rnd() - 0.5) * 0.3), rnd() * 6, s, s * 0.8, s), PAL[ai = (rnd() * PAL.length) | 0].clone().multiplyScalar(0.7), PAL2[ai].clone().multiplyScalar(0.85), PAL3[ai].clone().multiplyScalar(0.85), PAL4[ai].clone().multiplyScalar(0.9)); }
+    for (var i = 0; i < 90; i++) { var a = (a0 + rnd() * 90) * Math.PI / 180, top = rnd() < 0.6, s = 0.07 + rnd() * 0.08; put('fl', M(cx + R * Math.cos(a), top ? 2.3 + rnd() * 0.22 : 0.08 + rnd() * 0.3, cz + R * Math.sin(a) + (top ? 0 : (rnd() - 0.5) * 0.3), rnd() * 6, s, s * 0.8, s), PAL[ai = (rnd() * PAL.length) | 0].clone().multiplyScalar(0.7), PAL2[ai].clone().multiplyScalar(0.85), PAL3[ai].clone().multiplyScalar(0.85), PAL4[ai].clone().multiplyScalar(0.9), PAL5[ai].clone().multiplyScalar(0.9)); }
   }
   arc(36.5, 0.5, 3, 200); arc(36.5, -12.5, 3.2, 70);
 
@@ -643,6 +659,55 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     var m = new T.Mesh(new T.CircleGeometry(2.74, 96), std(0xffffff, 0.22, 0, { map: tex })); m.rotation.x = -Math.PI / 2; m.position.set(23.5, 0.186, -9); m.receiveShadow = true; gC.add(m);
   })();
 
+  /* ---------- Burgundy gazebo pieces, after the JW Marriott reference: a tall burgundy pelmet, sheer inner tiers, a glowing paper-flower cloud with hanging blooms, ruched posts and lush mixed florals ---------- */
+  var glowE = [];
+  (function(){
+    var mPelmet = std(0x4a1420, 0.8, 0, { side: T.DoubleSide });
+    var mSheer = std(0x7a4634, 0.9, 0, { side: T.DoubleSide, transparent: true, opacity: 0.6, emissive: 0xff9a50, emissiveIntensity: 0.3, depthWrite: false });
+    var mPaper = std(0xfff4e0, 0.8, 0, { side: T.DoubleSide, emissive: 0xffd9a0, emissiveIntensity: 0.9 });
+    var ring = function(r, h, yc, mat, pl){ var m = new T.Mesh(pleated(r, r, h, pl), mat); m.position.set(CXC, yc, -CZC); gE.add(m); return m; };
+    ring(CR + 0.06, 1.4, CH + 0.12, mPelmet, 110).castShadow = true;
+    ring(3.25, 0.6, 4.0, mSheer, 80); ring(2.85, 0.55, 4.18, mSheer, 70); ring(2.4, 0.5, 4.3, mSheer, 60);
+    var sh = new T.Shape();
+    for (var i = 0; i <= 64; i++) { var a = i / 64 * 6.2832, r = 0.42 + 0.58 * Math.abs(Math.cos(2 * a)), x = r * Math.cos(a), y = r * Math.sin(a); if (i === 0) sh.moveTo(x, y); else sh.lineTo(x, y); }
+    var clover = new T.ShapeGeometry(sh, 6); clover.rotateX(-Math.PI / 2);
+    def('petal', clover, mPaper, false, gE);
+    for (var c = 0; c < 520; c++) { var a1 = rnd() * 6.2832, r1 = 2.3 * Math.sqrt(rnd()), sc = 0.12 + 0.12 * rnd(); put('petal', MT(CXC + r1 * Math.cos(a1), 3.62 + rnd() * 0.4 + 0.3 * (r1 / 2.3), CZC + r1 * Math.sin(a1), (rnd() - 0.5) * 2.2, rnd() * 6, (rnd() - 0.5) * 2.2, sc, sc, sc)); }
+    for (var hgi = 0; hgi < 170; hgi++) { var a2 = rnd() * 6.2832, r2 = 1.6 + 2.0 * rnd(), s2 = 0.09 + 0.06 * rnd(); put('petal', MT(CXC + r2 * Math.cos(a2), 2.55 + rnd() * 1.3, CZC + r2 * Math.sin(a2), (rnd() - 0.5) * 0.9, rnd() * 6, (rnd() - 0.5) * 0.9, s2, s2, s2)); }
+    for (var ge = 0; ge < 7; ge++) glowE.push(CXC + (ge ? 1.3 * Math.cos(ge) : 0), 3.75, -(CZC + (ge ? 1.3 * Math.sin(ge) : 0)));
+    /* ruched fabric posts */
+    var pts = []; for (var py = 0; py <= 44; py++) pts.push(new T.Vector2(0.19 + 0.016 * Math.sin(py * 2.7) + 0.008 * Math.sin(py * 5.3), py * 0.1));
+    var postGeo = new T.LatheGeometry(pts, 20);
+    POSTS.forEach(function(p){ var m = new T.Mesh(postGeo, mDrape); m.position.set(p[0], 0, -p[1]); m.castShadow = true; gE.add(m); });
+    /* lush florals with grasses */
+    def('flE', new T.IcosahedronGeometry(1, 1), mFlower, false, gE); def('fbE', bloomGeo, mFlowerDS, false, gE);
+    var gg = new T.ConeGeometry(1, 1, 5); gg.translate(0, 0.5, 0); def('grass', gg, mFlower, false, gE);
+    var PE = PAL5, GR = ['#5e7a34', '#7a9440', '#46602a'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); });
+    function moundE(cx, y0, cz, rx, h, rz, n){
+      for (var i = 0; i < n; i++) {
+        var u = rnd() * 2 - 1, w = rnd() * 2 - 1, d = u * u + w * w; if (d > 1) { var k = rnd() / Math.sqrt(d); u *= k; w *= k; }
+        var t = 1 - (u * u + w * w), y = y0 + 0.05 + h * t * (0.25 + 0.75 * rnd()), s = 0.045 + 0.06 * rnd(), col = PE[(rnd() * PE.length) | 0].clone().multiplyScalar(0.6 + 0.5 * rnd());
+        if (rnd() < 0.6) put('fbE', MT(cx + u * rx, y, cz + w * rz, (rnd() - 0.5) * 1.5, rnd() * 6, (rnd() - 0.5) * 1.5, s * 1.3, s * 1.3, s * 1.3), col);
+        else put('flE', M(cx + u * rx, y, cz + w * rz, rnd() * 6, s, s * 0.8, s), col);
+      }
+      for (var b = 0; b < Math.round(n / 14); b++) put('grass', MT(cx + (rnd() * 2 - 1) * rx, y0, cz + (rnd() * 2 - 1) * rz, (rnd() - 0.5) * 0.7, rnd() * 6, (rnd() - 0.5) * 0.7, 0.009, h * (0.5 + rnd() * 0.6), 0.009), GR[(rnd() * 3) | 0].clone().multiplyScalar(0.7 + 0.5 * rnd()));
+    }
+    POSTS.forEach(function(p, i){ var side = (i === 0 || i === 3); moundE(p[0] + p[2] * 0.35, 0, p[1] + p[3] * 0.35, side ? 0.95 : 0.62, side ? 1.5 : 1.2, side ? 0.95 : 0.62, side ? 420 : 260); });
+    [25.2, 28, 31, 34, 37].forEach(function(x){ moundE(x, 0, 2.85, 0.85, 1.05, 0.42, 260); });
+    [27, 30, 33, 36].forEach(function(x){ moundE(x, 0, 6.08, 0.95, 0.9, 0.3, 230); });
+    moundE(41.0, 0, 3.2, 0.5, 1.1, 0.9, 200); moundE(37.2, 0, 1.4, 0.5, 1.0, 0.7, 180);
+  })();
+  /* true mirror reflections for the glossy black dance floor and catwalk (large screens, dark-floor themes only) */
+  var mirrors = [];
+  if (!small && T.Reflector) {
+    try {
+      var mk = function(geo, y){ var r = new T.Reflector(geo, { textureWidth: 1024, textureHeight: 1024, color: 0x343434, clipBias: 0.003 }); r.rotation.x = -Math.PI / 2; r.position.y = y; r.visible = false; scene.add(r); mirrors.push(r); return r; };
+      var cg = new T.CircleGeometry(2.79, 96); cg.translate(23.5, 9, 0); mk(cg, 0.1818);
+      var ws = new T.Shape(); ws.moveTo(38, -0.6); ws.lineTo(40, -0.6); ws.lineTo(40, 5.6); ws.lineTo(24.6, 5.6); ws.lineTo(24.6, 6.6); ws.lineTo(22.4, 6.6); ws.lineTo(22.4, 3.4); ws.lineTo(38, 3.4); ws.closePath();
+      mk(new T.ShapeGeometry(ws), 0.0245);
+    } catch (err) { mirrors = []; }
+  }
+
   /* ---------- labels ---------- */
   [['PELAMINAN', 23.5, 18.6], ['DANCE FLOOR', 23.5, 9], ['MUSIC', 5.5, 18.6], ['STALL MAKANAN', 2.4, 16.6], ['STALL MAKANAN', 42.6, 6.6], ['CATWALK', 31.5, 4.5], ['PINTU MASUK', 39, -1.4], ['PINTU', 7.7, -1.2], ['2 PINTU DITUTUP', 23.5, -1.2], ['PHOTOBOOTH', 13.4, -4.6], ['REGISTRASI', 20.5, -7.0], ['WELCOME SIGN', 35.6, -6.8], ['TANGGA', 42.3, -3.6], ['LIFT', 41.5, -12.5]].forEach(function(a){ textSprite(a[0], a[1], 0.6, a[2], 'area'); });
 
@@ -659,6 +724,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   points(glowBigB, 2.4, gB).opacity = 0.16;
   points(glowC, 0.7, gC).opacity = 0.55;
   points(glowD, 1.5, gD).opacity = 0.22;
+  points(glowE, 3.4, gE).opacity = 0.3;
 
   /* ---------- lights ---------- */
   /* two lighting modes: every light has a "terang" level and an "entry" level, and the frame loop fades between them */
@@ -750,17 +816,17 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   var showLabels = true, btnLabels = document.getElementById('btnLabels'), btnTour = document.getElementById('btnTour'), tourTimer = null, tourIdx = 0;
   btnLabels.addEventListener('click', function(){ showLabels = !showLabels; btnLabels.setAttribute('aria-pressed', showLabels ? 'true' : 'false'); });
   /* decor theme switch: recolours shared fabric, floors, chairs and flowers, and shows each theme's own pieces */
-  var themeI = 0, themeB = false, themeC = false, themeD = false, selTheme = document.getElementById('selTheme');
-  var THEME = [[mWallDrape, 0x161514, 0x9c8160, 0xb3a586, 0xcdb89a], [mDrape, 0x5a5c3a, 0xa98c68, 0xbcae8e, 0x4a1028], [mBurg, 0x6e1423, 0xb89c78, 0xcbbd9c, 0xcdb89a], [mCloth, CLOTH.getHex(), 0xb39c7c, 0xc2b494, 0x2c4124], [mRunner, 0x6e1423, 0x8f6f58, 0x55602f, 0x5a1230], [mChair, 0x15120f, 0xb39256, 0x3a2a1c, 0x3a1a12], [mGloss, 0x070707, 0xefe8da, 0xefe8da, 0x4a1028], [mPost, 0x2a211a, 0xb39256, 0xcbbd9c, 0x5a4632], [mGlass, 0xffffff, 0xffc27a, 0xffd9a0, 0xffc27a], [mSwag, 0xb89c78, 0xb89c78, 0xcfc2a2, 0xcdb89a], [mCush, 0xe9e1d0, 0xe9e1d0, 0xe9e1d0, 0xcdb89a], [mDance, 0x070707, 0xefe8da, 0xefe8da, 0xcdb89a], [mDance2, 0x070707, 0xefe8da, 0xefe8da, 0x5a4632], [mIvory, 0xf2ead8, 0xf2ead8, 0xf2ead8, 0x9a7650]];
-  var TH = { chairM: [0.1, 0.75, 0.15, 0.2], chairR: [0.42, 0.35, 0.5, 0.25], postM: [0.5, 0.8, 0.1, 0.85], glossR: [0.2, 0.14, 0.14, 0.2], glossE: [0.55, 0.9, 0.9, 0.45], glass: [0.22, 0.38, 0.34, 0.34], hemi: [0xffe6c8, 0xffd9a8, 0xffe2b8, 0xffe0bc] };
+  var themeI = 0, themeB = false, themeC = false, themeD = false, themeE = false, selTheme = document.getElementById('selTheme');
+  var THEME = [[mWallDrape, 0x161514, 0x9c8160, 0xb3a586, 0xcdb89a, 0x0c0b0b], [mDrape, 0x5a5c3a, 0xa98c68, 0xbcae8e, 0x4a1028, 0x3a1218], [mBurg, 0x6e1423, 0xb89c78, 0xcbbd9c, 0xcdb89a, 0x4a1420], [mCloth, CLOTH.getHex(), 0xb39c7c, 0xc2b494, 0x2c4124, 0xcdb89a], [mRunner, 0x6e1423, 0x8f6f58, 0x55602f, 0x5a1230, 0x5a1230], [mChair, 0x15120f, 0xb39256, 0x3a2a1c, 0x3a1a12, 0x15120f], [mGloss, 0x070707, 0xefe8da, 0xefe8da, 0x4a1028, 0x050505], [mPost, 0x2a211a, 0xb39256, 0xcbbd9c, 0x5a4632, 0x1a1010], [mGlass, 0xffffff, 0xffc27a, 0xffd9a0, 0xffc27a, 0xffc27a], [mSwag, 0xb89c78, 0xb89c78, 0xcfc2a2, 0xcdb89a, 0x4a1420], [mCush, 0xe9e1d0, 0xe9e1d0, 0xe9e1d0, 0xcdb89a, 0xe9e1d0], [mDance, 0x070707, 0xefe8da, 0xefe8da, 0xcdb89a, 0x040404], [mDance2, 0x070707, 0xefe8da, 0xefe8da, 0x5a4632, 0x040404], [mIvory, 0xf2ead8, 0xf2ead8, 0xf2ead8, 0x9a7650, 0xf2ead8]];
+  var TH = { chairM: [0.1, 0.75, 0.15, 0.2, 0.1], chairR: [0.42, 0.35, 0.5, 0.25, 0.42], postM: [0.5, 0.8, 0.1, 0.85, 0.3], glossR: [0.2, 0.14, 0.14, 0.2, 0.08], glossE: [0.55, 0.9, 0.9, 0.45, 0.4], glass: [0.22, 0.38, 0.34, 0.34, 0.34], hemi: [0xffe6c8, 0xffd9a8, 0xffe2b8, 0xffe0bc, 0xffdcc0] };
   function applyTheme(i){
-    themeI = i; themeB = i === 1; themeC = i === 2; themeD = i === 3;
+    themeI = i; themeB = i === 1; themeC = i === 2; themeD = i === 3; themeE = i === 4;
     THEME.forEach(function(t){ t[0].color.setHex(t[1 + i]).convertSRGBToLinear(); });
     mChair.metalness = TH.chairM[i]; mChair.roughness = TH.chairR[i]; mPost.metalness = TH.postM[i];
-    mGloss.roughness = TH.glossR[i]; mGloss.userData.env = TH.glossE[i]; mDance.roughness = [0.2, 0.14, 0.14, 0.3][i]; mDance.userData.env = [0.55, 0.9, 0.9, 0.5][i]; mDance2.roughness = [0.2, 0.14, 0.14, 0.35][i]; mDance2.metalness = themeD ? 0.7 : 0; mDance2.userData.env = [0.55, 0.9, 0.9, 0.8][i]; mGlass.opacity = TH.glass[i];
-    gA.visible = i === 0; gB.visible = themeB; gC.visible = themeC; gD.visible = themeD; mIvory.metalness = themeD ? 0.6 : 0;
+    mGloss.roughness = TH.glossR[i]; mGloss.userData.env = TH.glossE[i]; mDance.roughness = [0.2, 0.14, 0.14, 0.3, 0.08][i]; mDance.userData.env = [0.55, 0.9, 0.9, 0.5, 0.4][i]; mDance2.roughness = [0.2, 0.14, 0.14, 0.35, 0.12][i]; mDance2.metalness = themeD ? 0.7 : 0; mDance2.userData.env = [0.55, 0.9, 0.9, 0.8, 0.4][i]; mGlass.opacity = TH.glass[i];
+    gA.visible = i === 0; gB.visible = themeB; gC.visible = themeC; gD.visible = themeD; mIvory.metalness = themeD ? 0.6 : 0; gE.visible = themeE; gChand.visible = !themeE; if (canopyValance) canopyValance.visible = !themeE; mirrors.forEach(function(r){ r.visible = (i === 0 || themeE); });
     ['fl', 'fb'].forEach(function(key){
-      var d = inst[key], src = [d.c, d.c2, d.c3, d.c4][i];
+      var d = inst[key], src = [d.c, d.c2, d.c3, d.c4, d.c5][i];
       if (d.mesh) { for (var k = 0; k < src.length; k++) d.mesh.setColorAt(k, src[k]); d.mesh.instanceColor.needsUpdate = true; }
     });
     hemi.color.setHex(TH.hemi[i]);
@@ -897,6 +963,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
       composer.addPass(new T.RenderPass(scene, camera));
       composer.addPass(new T.UnrealBloomPass(new T.Vector2(512, 512), 0.42, 0.75, 0.82));
       composer.addPass(new T.ShaderPass(T.GammaCorrectionShader));
+      renderer.outputEncoding = T.LinearEncoding; /* the gamma pass does the encoding, and mirror textures must stay linear */
     } catch (err) { composer = null; }
   }
   function resize(){
@@ -906,7 +973,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   }
   window.addEventListener('resize', resize); resize();
   goTo('denah', true);
-  applyTheme(3);
+  applyTheme(4);
 
   var last = performance.now(), cut = 1;
   function frame(now){
@@ -922,23 +989,24 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     } else pose(st);
     /* above the ceiling line the walls drop to plan height and the ceiling lifts away */
     var want = camera.position.y > 7.4 ? 1 : 0;
+    var nearWant = camera.position.y > 7.4 ? 2 : 0.1; if (camera.near !== nearWant) { camera.near = nearWant; camera.updateProjectionMatrix(); }
     cut += (want - cut) * Math.min(1, dt * 6);
     walls.scale.y = 1 - cut * 0.83;
-    tall.visible = cut < 0.5; gBTall.visible = (themeB || themeC || themeD) && cut < 0.5; gCTall.visible = themeC && cut < 0.5;
+    tall.visible = cut < 0.5; gBTall.visible = (themeB || themeC || themeD || themeE) && cut < 0.5; gCTall.visible = themeC && cut < 0.5;
     labels.visible = showLabels && cut > 0.5;
     scene.fog.density = 0.0045 * (1 - cut);
     lm += (lmTarget - lm) * Math.min(1, dt * 2.2);
     if (Math.abs(lm - lmTarget) < 0.002) lm = lmTarget;
     if (lm !== lmApplied) {
       lmApplied = lm;
-      for (var li = 0; li < LS.length; li++) LS[li][0].intensity = (LS[li][1] + (LS[li][2] - LS[li][1]) * lm) * (themeC && LS[li][3] ? 0.6 : 1);
+      for (var li = 0; li < LS.length; li++) LS[li][0].intensity = (LS[li][1] + (LS[li][2] - LS[li][1]) * lm) * (LS[li][3] ? (themeC ? 0.6 : themeE ? 0.34 : 1) : 1);
       for (var mi = 0; mi < MATS.length; mi++) MATS[mi].envMapIntensity = MATS[mi].userData.env * (1 - 0.85 * lm);
-      mLightStrip.color.copy(STRIPBASE).multiplyScalar((1 - 0.94 * lm) * (themeC ? 0.25 : 1));
-      mFix.color.copy(FIXBASE).multiplyScalar((1 - 0.97 * lm) * (themeC ? 0.25 : 1));
+      mLightStrip.color.copy(STRIPBASE).multiplyScalar((1 - 0.94 * lm) * (themeC ? 0.25 : themeE ? 0.5 : 1));
+      mFix.color.copy(FIXBASE).multiplyScalar((1 - 0.97 * lm) * (themeC ? 0.25 : themeE ? 0.5 : 1));
       mMural.emissiveIntensity = 0.28 - 0.16 * lm; mCrystal.emissiveIntensity = 0.9 - 0.5 * lm;
-      mWallDrape.emissiveIntensity = (themeB ? 0.5 : themeC ? 0.38 : themeD ? 0.2 : 0) * (1 - 0.5 * lm); mDrape.emissiveIntensity = (themeB ? 0.45 : themeC ? 0.42 : themeD ? 0.12 : 0) * (1 - 0.4 * lm);
+      mWallDrape.emissiveIntensity = (themeB ? 0.5 : themeC ? 0.38 : themeD ? 0.2 : 0) * (1 - 0.5 * lm); mDrape.emissiveIntensity = (themeB ? 0.45 : themeC ? 0.42 : themeD ? 0.12 : themeE ? 0.5 : 0) * (1 - 0.4 * lm);
       mShade.emissiveIntensity = 0.9 - 0.4 * lm;
-      var bo = Math.max(lm, themeC ? 0.5 : 0); for (var bm = 0; bm < BEAMS.length; bm++) { BEAMS[bm].material.opacity = 0.13 * bo; BEAMS[bm].visible = bo > 0.01; }
+      var bo = Math.max(lm, (themeC || themeE) ? 0.5 : 0); for (var bm = 0; bm < BEAMS.length; bm++) { BEAMS[bm].material.opacity = 0.13 * bo; BEAMS[bm].visible = bo > 0.01; }
       renderer.toneMappingExposure = 1.25 - 0.1 * lm;
     }
     var fl = 0.86 + 0.09 * Math.sin(now * 0.009) + 0.05 * Math.sin(now * 0.023);
