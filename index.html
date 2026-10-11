@@ -19,6 +19,7 @@ body{margin:0;background:var(--ink);color:var(--cream);font-family:var(--ui);ove
 #stage{position:fixed;inset:0;background:var(--ink)}
 #stage canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 #stage canvas:active{cursor:grabbing}
+#stage::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 52%,rgba(0,0,0,.5) 100%)}
 .head{position:fixed;left:0;top:0;padding:calc(env(safe-area-inset-top,0px) + 18px) 20px 0;pointer-events:none;display:flex;flex-direction:column;gap:4px;max-width:min(92vw,560px)}
 .eyebrow{font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--muted);text-shadow:0 1px 8px rgba(0,0,0,.8)}
 h1{margin:0;font-family:var(--display);font-weight:600;font-size:clamp(26px,4.2vw,40px);line-height:1.05;text-wrap:balance;text-shadow:0 2px 16px rgba(0,0,0,.75)}
@@ -56,12 +57,14 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
           <option value="0">Olive &amp; burgundy</option>
           <option value="1">Drapery champagne</option>
           <option value="2">Ivory garden</option>
+          <option value="3">Sasa's reference</option>
         </select>
       </label>
       <button type="button" id="btnBright" aria-pressed="true">Lampu terang</button>
       <button type="button" id="btnEntry" aria-pressed="false">Lampu entry</button>
       <button type="button" id="btnLabels" aria-pressed="true">Nomor meja</button>
       <button type="button" id="btnTour" aria-pressed="false">Tur otomatis</button>
+      <button type="button" id="btnMusic" aria-pressed="false">Musik</button>
     </div>
     <div class="pad" aria-label="Kontrol gerak">
       <button type="button" class="up" data-k="f" aria-label="Maju"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 10 6.5l6 6"></path></svg></button>
@@ -75,6 +78,13 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
 <div class="fail" id="fail" hidden>Perangkat atau browser ini tidak bisa menampilkan 3D. Coba buka di Chrome atau Safari versi terbaru.</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/GammaCorrectionShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 <script>
 (function(){
   var T = window.THREE, stage = document.getElementById('stage');
@@ -135,6 +145,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   var gA = new T.Group(), gB = new T.Group(), gBTall = new T.Group();
   scene.add(gA); scene.add(gB); scene.add(gBTall); gB.visible = false; gBTall.visible = false;
   var gC = new T.Group(), gCTall = new T.Group(); scene.add(gC); scene.add(gCTall); gC.visible = false; gCTall.visible = false;
+  var gD = new T.Group(); scene.add(gD); gD.visible = false;
 
   function box(parent, mat, x0, y0, z0, x1, y1, z1, cast){
     var m = new T.Mesh(new T.BoxGeometry(Math.abs(x1 - x0), y1 - y0, Math.abs(z1 - z0)), mat);
@@ -165,7 +176,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   }
   /* instancing collector */
   var inst = {};
-  function def(key, geo, mat, cast, parent){ inst[key] = { geo: geo, mat: mat, m: [], c: [], c2: [], c3: [], cast: cast !== false, parent: parent || scene }; }
+  function def(key, geo, mat, cast, parent){ inst[key] = { geo: geo, mat: mat, m: [], c: [], c2: [], c3: [], c4: [], cast: cast !== false, parent: parent || scene }; }
   var _q = new T.Quaternion(), _e = new T.Euler(), _p = new T.Vector3(), _s = new T.Vector3();
   function M(x, y, z, ry, sx, sy, sz){
     _e.set(0, ry || 0, 0); _q.setFromEuler(_e); _p.set(x, y, -z); _s.set(sx, sy, sz);
@@ -175,7 +186,8 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     _q.set(0, 0, 0, 1); _p.set(lx, ly, lz); _s.set(sx, sy, sz);
     return new T.Matrix4().compose(_p, _q, _s);
   }
-  function put(key, mat, color, color2, color3){ inst[key].m.push(mat); if (color) inst[key].c.push(color); if (color2) inst[key].c2.push(color2); if (color3) inst[key].c3.push(color3); }
+  function put(key, mat, color, color2, color3, color4){ var d = inst[key]; d.m.push(mat); if (color) d.c.push(color); if (color2) d.c2.push(color2); if (color3) d.c3.push(color3); if (color4) d.c4.push(color4); }
+  function MT(x, y, z, rx, ry, rz, sx, sy, sz){ _e.set(rx, ry, rz); _q.setFromEuler(_e); _p.set(x, y, -z); _s.set(sx, sy, sz); return new T.Matrix4().compose(_p, _q, _s); }
   function flush(){
     for (var k in inst) {
       var d = inst[k]; if (!d.m.length) continue;
@@ -233,6 +245,29 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   def('clothBox', UB, mCloth); def('runner', UB, mRunner, false);
   def('plate', UC24, mIvory, false); def('napkin', UB, mRunner, false); def('glass', UC, mGlass, false);
   def('fl', new T.IcosahedronGeometry(1, small ? 0 : 1), mFlower, !small);
+  /* an open, five-petalled cup so flower masses read as blooms instead of balls */
+  var mFlowerDS = std(0xffffff, 0.7, 0, { side: T.DoubleSide });
+  var bloomGeo = (function(){
+    var g = new T.LatheGeometry([new T.Vector2(0.02, 0.1), new T.Vector2(0.4, 0.16), new T.Vector2(0.8, 0.4), new T.Vector2(1.0, 0.78)], small ? 10 : 15), p = g.attributes.position;
+    for (var i = 0; i < p.count; i++) { var x = p.getX(i), z = p.getZ(i), r = Math.hypot(x, z), a = Math.atan2(x, z), k = 1 + 0.2 * r * Math.sin(a * 5); p.setX(i, x * k); p.setZ(i, z * k); p.setY(i, p.getY(i) + 0.12 * r * Math.cos(a * 5)); }
+    g.computeVertexNormals(); return g;
+  })();
+  def('fb', bloomGeo, mFlowerDS, false);
+  def('lily', bloomGeo, mFlowerDS, false, gD);
+  var mBronze = std(0x5a4632, 0.35, 0.85);
+  /* paper lanterns for Sasa's reference: hanging globes, floor globes and oblong table lanterns */
+  var mLantern = std(0xf3e6c8, 0.9, 0, { emissive: 0xffd9a0, emissiveIntensity: 0.95 }), sphereGeo = new T.SphereGeometry(1, 24, 16), glowD = [];
+  function globe(x, y, z, r, sy){ var m = new T.Mesh(sphereGeo, mLantern); m.scale.set(r, r * (sy || 1), r); m.position.set(x, y, -z); gD.add(m); glowD.push(x, y, -z); }
+  function lantern(x, z){
+    cyl(gD, mBronze, x, z, 0.014, 0.76, 1.6, 6, false); globe(x, 1.95, z, 0.19, 1.9);
+    cyl(gD, mBronze, x + 0.3, z + 0.12, 0.012, 0.76, 1.25, 6, false); globe(x + 0.3, 1.5, z + 0.12, 0.14, 1.9);
+  }
+  /* soft contact shadows under tables */
+  (function(){
+    var g = new T.CircleGeometry(1, 28); g.rotateX(-Math.PI / 2);
+    var t = canvasTex(64, 64, function(c){ var gr = c.createRadialGradient(32, 32, 6, 32, 32, 32); gr.addColorStop(0, 'rgba(0,0,0,0.85)'); gr.addColorStop(0.6, 'rgba(0,0,0,0.5)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = gr; c.fillRect(0, 0, 64, 64); });
+    def('blob', g, new T.MeshBasicMaterial({ map: t, transparent: true, opacity: 0.6, depthWrite: false }), false);
+  })();
   def('wax', UC, mWax, false); def('flame', new T.SphereGeometry(1, 8, 6), mFlame, false); def('hurr', new T.CylinderGeometry(1, 1, 1, 16, 1, true), mGlass, false);
   def('leaf', new T.IcosahedronGeometry(1, 0), mFlower, false, gC);
   def('crystal', new T.OctahedronGeometry(1, 0), mCrystal, false);
@@ -262,10 +297,14 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
       if (d > 1) { var k = rnd() / Math.sqrt(d); u *= k; w *= k; }
       var t = 1 - (u * u + w * w), y = y0 + 0.05 + h * t * (0.25 + 0.75 * rnd()), s = 0.04 + 0.055 * rnd();
       var ci = (rnd() * PAL.length) | 0, ck = 0.5 + 0.45 * rnd();
-      put('fl', M(cx + u * rx, y, cz + w * rz, rnd() * 6, s, s * (0.6 + 0.35 * rnd()), s), PAL[ci].clone().multiplyScalar(ck), PAL2[ci].clone().multiplyScalar(ck + 0.05), PAL3[ci].clone().multiplyScalar(ck + 0.1));
+      var c1 = PAL[ci].clone().multiplyScalar(ck), c2 = PAL2[ci].clone().multiplyScalar(ck + 0.05), c3 = PAL3[ci].clone().multiplyScalar(ck + 0.1), c4 = PAL4[ci].clone().multiplyScalar(ck + 0.15);
+      if (rnd() < 0.62) { var bs = s * 1.3; put('fb', MT(cx + u * rx, y, cz + w * rz, (rnd() - 0.5) * 1.5, rnd() * 6, (rnd() - 0.5) * 1.5, bs, bs, bs), c1, c2, c3, c4); }
+      else put('fl', M(cx + u * rx, y, cz + w * rz, rnd() * 6, s, s * (0.6 + 0.35 * rnd()), s), c1, c2, c3, c4);
     }
   }
   /* tall foliage centrepiece on a slim gold stem, for the ivory garden theme */
+  /* Sasa's reference: crimson red, crisp white, champagne, moss and sage, with a touch of bronze */
+  var PAL4 = ['#5a1230', '#6e1a3a', '#3f0c22', '#f1efe9', '#8a2a4a', '#e6dcc6', '#3f5a2a', '#8f9c78', '#56402c', '#cdb89a'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); });
   var LEAF = ['#56602f', '#3d4a26', '#6f7d3c', '#8a9a50'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); }), LEAFW = new T.Color('#f4eedd').convertSRGBToLinear();
   function tree(x, z){
     cyl(gC, mGold, x, z, 0.022, 0.76, 2.35, 6, false);
@@ -464,7 +503,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
 
   /* ---------- tables ---------- */
   function roundTable(cx, cz, num){
-    put('rcloth', M(cx, 0, cz, rnd() * 6, 1, 1, 1));
+    put('rcloth', M(cx, 0, cz, rnd() * 6, 1, 1, 1)); put('blob', M(cx, 0.006, cz, 0, 2.0, 1, 2.0));
     for (var i = 0; i < 10; i++) {
       var a = i / 10 * 6.2832 + 0.2, ca = Math.cos(a), sa = Math.sin(a);
       chair(cx + 1.3 * ca, cz + 1.3 * sa, -ca, -sa, 0);
@@ -473,12 +512,13 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     mound(cx, 0.76, cz, 0.3, 0.42, 0.3, 36);
     candle(cx + 0.4, 0.76, cz + 0.1, 0.22, true); candle(cx - 0.3, 0.76, cz - 0.3, 0.3, true); candle(cx - 0.14, 0.76, cz + 0.4, 0.16, true);
     textSprite(String(num), cx, 1.7, cz, 'num');
+    if (num % 2 === 1) lantern(cx, cz);
     if (num % 2 === 0) tree(cx, cz); else { cyl(gC, mGold, cx, cz, 0.012, 0.76, 1.2, 6, false); shade(gC, cx, cz, 1.16, 0.07, 0.14, 0.22, glowC); }
   }
   [[13.5, 3.5], [13.5, 8.5], [13.5, 13.5], [10, 6], [10, 11], [6.5, 3.5], [6.5, 8.5], [6.5, 13.5], [3, 6], [3, 11]].forEach(function(p, i){ roundTable(p[0], p[1], i + 1); });
   [[32.8, 8.2], [32.8, 12.7], [32.8, 17.2], [35.9, 10.4], [35.9, 15], [39, 8.2], [39, 12.7], [39, 17.2], [42.1, 10.4], [42.1, 15]].forEach(function(p, i){ roundTable(p[0], p[1], i + 11); });
   function familyTable(cx, cz, name){
-    put('clothBox', M(cx, 0.39, cz, 0, 1.1, 0.74, 3.0));
+    put('clothBox', M(cx, 0.39, cz, 0, 1.1, 0.74, 3.0)); put('blob', M(cx, 0.006, cz, 0, 1.9, 1, 2.3));
     put('runner', M(cx, 0.766, cz, 0, 0.34, 0.01, 3.0));
     [-1.05, -0.35, 0.35, 1.05].forEach(function(t){
       chair(cx - 0.95, cz + t, 1, 0, 0); chair(cx + 0.95, cz + t, -1, 0, 0);
@@ -491,7 +531,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   }
   [7.8, 10.8, 13.8].forEach(function(z, i){ familyTable(17.1, z, 'Kel. A' + (i + 1)); familyTable(29.9, z, 'Kel. B' + (i + 1)); });
   /* keluarga inti: 10 seats on one side, facing the pelaminan straight across the dance floor */
-  put('clothBox', M(23.5, 0.39, 1.7, 0, 6.5, 0.74, 1.0));
+  put('clothBox', M(23.5, 0.39, 1.7, 0, 6.5, 0.74, 1.0)); put('blob', M(23.5, 0.006, 1.5, 0, 4.2, 1, 1.6));
   put('runner', M(23.5, 0.766, 1.93, 0, 6.5, 0.01, 0.3));
   for (var fi = 0; fi < 10; fi++) { var fx = 23.5 + (fi - 4.5) * 0.65; chair(fx, 0.72, 0, 1, 0); setting(fx, 1.5, 0, -1); }
   for (var fj = 0; fj < 5; fj++) mound(21 + fj * 1.25, 0.76, 1.95, 0.4, 0.16, 0.12, 14);
@@ -529,7 +569,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   function arc(cx, cz, R, a0){
     var m = new T.Mesh(new T.CylinderGeometry(R, R, 2.3, 28, 1, true, (a0 + 90) * Math.PI / 180, Math.PI / 2), mCream);
     m.position.set(cx, 1.15, -cz); m.castShadow = true; m.receiveShadow = true; scene.add(m);
-    for (var i = 0; i < 90; i++) { var a = (a0 + rnd() * 90) * Math.PI / 180, top = rnd() < 0.6, s = 0.07 + rnd() * 0.08; put('fl', M(cx + R * Math.cos(a), top ? 2.3 + rnd() * 0.22 : 0.08 + rnd() * 0.3, cz + R * Math.sin(a) + (top ? 0 : (rnd() - 0.5) * 0.3), rnd() * 6, s, s * 0.8, s), PAL[ai = (rnd() * PAL.length) | 0].clone().multiplyScalar(0.7), PAL2[ai].clone().multiplyScalar(0.85), PAL3[ai].clone().multiplyScalar(0.85)); }
+    for (var i = 0; i < 90; i++) { var a = (a0 + rnd() * 90) * Math.PI / 180, top = rnd() < 0.6, s = 0.07 + rnd() * 0.08; put('fl', M(cx + R * Math.cos(a), top ? 2.3 + rnd() * 0.22 : 0.08 + rnd() * 0.3, cz + R * Math.sin(a) + (top ? 0 : (rnd() - 0.5) * 0.3), rnd() * 6, s, s * 0.8, s), PAL[ai = (rnd() * PAL.length) | 0].clone().multiplyScalar(0.7), PAL2[ai].clone().multiplyScalar(0.85), PAL3[ai].clone().multiplyScalar(0.85), PAL4[ai].clone().multiplyScalar(0.9)); }
   }
   arc(36.5, 0.5, 3, 200); arc(36.5, -12.5, 3.2, 70);
 
@@ -574,6 +614,23 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     var m = new T.Mesh(g, mSwag); m.position.set(23.5, 4.8, -9); gCTall.add(m);
   })();
 
+  /* Sasa's reference pieces: ivory drapes framing a crimson velvet backdrop, hanging and floor lanterns, white calla sprays on bronze stands */
+  (function(){
+    drape(gD, mSwag, 17.6, 19.5, 19.8, 19.5, 0.6, 6.5); drape(gD, mSwag, 27.2, 19.5, 29.4, 19.5, 0.6, 6.5);
+    [[20.6, 4.6, 18.6, 0.45], [22.2, 3.4, 18.9, 0.3], [21.4, 2.5, 18.4, 0.36], [25.2, 5.0, 18.8, 0.38], [26.4, 3.9, 18.5, 0.48], [25.6, 2.8, 18.9, 0.3], [23.5, 5.4, 19.1, 0.34]].forEach(function(h){
+      globe(h[0], h[1], h[2], h[3]); cyl(gD, mBronze, h[0], h[2], 0.006, h[1] + h[3], 6.6, 4, false);
+    });
+    [[18.9, 1.1, 17.2, 0.5], [19.9, 0.92, 16.8, 0.32], [28.1, 1.1, 17.2, 0.5], [27.1, 0.92, 16.8, 0.32], [25.4, 0.3, 2.5, 0.3], [28.4, 0.24, 2.6, 0.24], [31.4, 0.3, 2.5, 0.3], [34.4, 0.24, 2.6, 0.24], [12.6, 0.4, -7.2, 0.4], [12.9, 0.28, -2.0, 0.28], [12.2, 2.4, -4.6, 0.36]].forEach(function(f){ globe(f[0], f[1], f[2], f[3]); });
+    var W = new T.Color('#f4f1ea').convertSRGBToLinear(), G = new T.Color('#3f5a2a').convertSRGBToLinear();
+    [[21.0, 15.2, 0, 1.9], [26.0, 15.2, 0, 1.9], [37.4, 3.0, 0, 1.8], [40.7, 6.3, 0, 1.8], [36.4, -3.9, 0, 1.6]].forEach(function(q){
+      var x = q[0], z = q[1], y0 = q[2], yTop = q[3];
+      cyl(gD, mBronze, x, z, 0.03, y0, yTop, 8, false); cyl(gD, mBronze, x, z, 0.17, y0, y0 + 0.03, 20, false);
+      for (var i = 0; i < 54; i++) {
+        var a = rnd() * 6.2832, lean = 0.1 + rnd() * 0.6, len = 0.3 + rnd() * 0.6, sc = 0.06 + 0.04 * rnd(), white = rnd() < 0.68;
+        put('lily', MT(x + Math.cos(a) * lean * len, yTop + len * (1 - lean * 0.5) - 0.15, z + Math.sin(a) * lean * len, (rnd() - 0.5) * 0.9, rnd() * 6, (rnd() - 0.5) * 0.9, white ? sc : sc * 1.5, white ? sc * 2.4 : sc * 0.6, white ? sc : sc * 1.5), (white ? W : G).clone().multiplyScalar(0.7 + 0.3 * rnd()));
+      }
+    });
+  })();
   /* petal pattern on the dance floor, ivory garden theme only */
   (function(){
     var tex = canvasTex(1024, 1024, function(g, w, h){
@@ -601,6 +658,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   var glowMatA = points(glowBig, 0.55, scene), glowMatB = points(glowSmall, 0.2, scene);
   points(glowBigB, 2.4, gB).opacity = 0.16;
   points(glowC, 0.7, gC).opacity = 0.55;
+  points(glowD, 1.5, gD).opacity = 0.22;
 
   /* ---------- lights ---------- */
   /* two lighting modes: every light has a "terang" level and an "entry" level, and the frame loop fades between them */
@@ -692,17 +750,19 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   var showLabels = true, btnLabels = document.getElementById('btnLabels'), btnTour = document.getElementById('btnTour'), tourTimer = null, tourIdx = 0;
   btnLabels.addEventListener('click', function(){ showLabels = !showLabels; btnLabels.setAttribute('aria-pressed', showLabels ? 'true' : 'false'); });
   /* decor theme switch: recolours shared fabric, floors, chairs and flowers, and shows each theme's own pieces */
-  var themeI = 0, themeB = false, themeC = false, selTheme = document.getElementById('selTheme');
-  var THEME = [[mWallDrape, 0x161514, 0x9c8160, 0xb3a586], [mDrape, 0x5a5c3a, 0xa98c68, 0xbcae8e], [mBurg, 0x6e1423, 0xb89c78, 0xcbbd9c], [mCloth, CLOTH.getHex(), 0xb39c7c, 0xc2b494], [mRunner, 0x6e1423, 0x8f6f58, 0x55602f], [mChair, 0x15120f, 0xb39256, 0x3a2a1c], [mGloss, 0x070707, 0xefe8da, 0xefe8da], [mPost, 0x2a211a, 0xb39256, 0xcbbd9c], [mGlass, 0xffffff, 0xffc27a, 0xffd9a0], [mSwag, 0xb89c78, 0xb89c78, 0xcfc2a2]];
-  var TH = { chairM: [0.1, 0.75, 0.15], chairR: [0.42, 0.35, 0.5], postM: [0.5, 0.8, 0.1], glossR: [0.2, 0.14, 0.14], glossE: [0.55, 0.9, 0.9], glass: [0.22, 0.38, 0.34], hemi: [0xffe6c8, 0xffd9a8, 0xffe2b8] };
+  var themeI = 0, themeB = false, themeC = false, themeD = false, selTheme = document.getElementById('selTheme');
+  var THEME = [[mWallDrape, 0x161514, 0x9c8160, 0xb3a586, 0x4a3426], [mDrape, 0x5a5c3a, 0xa98c68, 0xbcae8e, 0x4a1028], [mBurg, 0x6e1423, 0xb89c78, 0xcbbd9c, 0x34492a], [mCloth, CLOTH.getHex(), 0xb39c7c, 0xc2b494, 0xcdb89a], [mRunner, 0x6e1423, 0x8f6f58, 0x55602f, 0x5a1230], [mChair, 0x15120f, 0xb39256, 0x3a2a1c, 0x8a6a3c], [mGloss, 0x070707, 0xefe8da, 0xefe8da, 0x24100b], [mPost, 0x2a211a, 0xb39256, 0xcbbd9c, 0x5a4632], [mGlass, 0xffffff, 0xffc27a, 0xffd9a0, 0xffc27a], [mSwag, 0xb89c78, 0xb89c78, 0xcfc2a2, 0xd8c9ac], [mIvory, 0xf2ead8, 0xf2ead8, 0xf2ead8, 0x9a7650]];
+  var TH = { chairM: [0.1, 0.75, 0.15, 0.7], chairR: [0.42, 0.35, 0.5, 0.35], postM: [0.5, 0.8, 0.1, 0.85], glossR: [0.2, 0.14, 0.14, 0.17], glossE: [0.55, 0.9, 0.9, 0.5], glass: [0.22, 0.38, 0.34, 0.34], hemi: [0xffe6c8, 0xffd9a8, 0xffe2b8, 0xffe0bc] };
   function applyTheme(i){
-    themeI = i; themeB = i === 1; themeC = i === 2;
+    themeI = i; themeB = i === 1; themeC = i === 2; themeD = i === 3;
     THEME.forEach(function(t){ t[0].color.setHex(t[1 + i]).convertSRGBToLinear(); });
     mChair.metalness = TH.chairM[i]; mChair.roughness = TH.chairR[i]; mPost.metalness = TH.postM[i];
     mGloss.roughness = TH.glossR[i]; mGloss.userData.env = TH.glossE[i]; mGlass.opacity = TH.glass[i];
-    gA.visible = i === 0; gB.visible = themeB; gC.visible = themeC;
-    var d = inst.fl, src = [d.c, d.c2, d.c3][i];
-    if (d.mesh) { for (var k = 0; k < src.length; k++) d.mesh.setColorAt(k, src[k]); d.mesh.instanceColor.needsUpdate = true; }
+    gA.visible = i === 0; gB.visible = themeB; gC.visible = themeC; gD.visible = themeD; mIvory.metalness = themeD ? 0.6 : 0;
+    ['fl', 'fb'].forEach(function(key){
+      var d = inst[key], src = [d.c, d.c2, d.c3, d.c4][i];
+      if (d.mesh) { for (var k = 0; k < src.length; k++) d.mesh.setColorAt(k, src[k]); d.mesh.instanceColor.needsUpdate = true; }
+    });
     hemi.color.setHex(TH.hemi[i]);
     if (themeC) { mWallDrape.emissive.setRGB(1, 1, 1); mDrape.emissive.setRGB(1, 1, 1); } else { mWallDrape.emissive.setRGB(1, 1, 1); mDrape.emissive.setRGB(1, 1, 1); }
     mSwag.emissive.setHex(themeC ? 0xffc070 : 0xff9a3c).convertSRGBToLinear(); mSwag.emissiveIntensity = themeC ? 0.22 : 0.1;
@@ -713,6 +773,63 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   function setLight(entry){ lmTarget = entry ? 1 : 0; btnBright.setAttribute('aria-pressed', entry ? 'false' : 'true'); btnEntry.setAttribute('aria-pressed', entry ? 'true' : 'false'); }
   btnBright.addEventListener('click', function(){ setLight(false); });
   btnEntry.addEventListener('click', function(){ setLight(true); });
+  /* background music: an original slow jazz ballad in 12/8, synthesised in the browser. Starts only from the Musik button. */
+  var music = null, btnMusic = document.getElementById('btnMusic');
+  function startMusic(){
+    var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+    var ac = new AC(), master = ac.createGain(); master.gain.value = 0.0001;
+    var lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 4200;
+    var len = Math.floor(ac.sampleRate * 2.6), ir = ac.createBuffer(2, len, ac.sampleRate);
+    for (var ch = 0; ch < 2; ch++) { var dt = ir.getChannelData(ch); for (var i = 0; i < len; i++) dt[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
+    var conv = ac.createConvolver(); conv.buffer = ir; var wet = ac.createGain(); wet.gain.value = 0.3;
+    master.connect(lp); lp.connect(ac.destination); lp.connect(conv); conv.connect(wet); wet.connect(ac.destination);
+    master.gain.exponentialRampToValueAtTime(0.55, ac.currentTime + 2.5);
+    var nlen = Math.floor(ac.sampleRate * 0.2), nb = ac.createBuffer(1, nlen, ac.sampleRate), nd = nb.getChannelData(0);
+    for (var j = 0; j < nlen; j++) nd[j] = Math.random() * 2 - 1;
+    var hz = function(m){ return 440 * Math.pow(2, (m - 69) / 12); };
+    function keys(m, t, d, v){
+      var o = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain(), g2 = ac.createGain();
+      o.type = 'sine'; o.frequency.value = hz(m); o2.type = 'sine'; o2.frequency.value = hz(m) * 2.005; g2.gain.value = 0.16;
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(v, t + 0.012); g.gain.exponentialRampToValueAtTime(v * 0.38, t + 0.5); g.gain.exponentialRampToValueAtTime(0.0006, t + d + 0.9);
+      o.connect(g); o2.connect(g2); g2.connect(g); g.connect(master); o.start(t); o2.start(t); o.stop(t + d + 1); o2.stop(t + d + 1);
+    }
+    function bass(m, t, d){
+      var o = ac.createOscillator(), g = ac.createGain(), f = ac.createBiquadFilter(); o.type = 'triangle'; o.frequency.value = hz(m); f.type = 'lowpass'; f.frequency.value = 520;
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.34, t + 0.02); g.gain.exponentialRampToValueAtTime(0.001, t + d);
+      o.connect(f); f.connect(g); g.connect(master); o.start(t); o.stop(t + d + 0.05);
+    }
+    function brush(t, v){
+      var n = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(); n.buffer = nb; f.type = 'bandpass'; f.frequency.value = 5200; f.Q.value = 0.7;
+      g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0005, t + 0.12); n.connect(f); f.connect(g); g.connect(master); n.start(t); n.stop(t + 0.2);
+    }
+    var TR = 0.36, ARP = [0, 1, 2, 3, 2, 1, 0, 1, 2, 3, 2, 1];
+    var BARS = [
+      [38, [57, 61, 62, 66], [[66, 0, 6], [69, 6, 6]]], [42, [57, 61, 64, 66], [[73, 0, 9], [71, 9, 3]]], [47, [57, 59, 62, 66], [[69, 0, 6], [66, 6, 3], [62, 9, 3]]], [43, [55, 59, 62, 66], [[64, 0, 12]]],
+      [45, [57, 62, 64, 66], [[66, 0, 3], [69, 3, 3], [74, 6, 6]]], [45, [55, 57, 61, 64], [[73, 0, 6], [71, 6, 3], [67, 9, 3]]], [38, [57, 61, 62, 66], [[69, 0, 12]]], [45, [55, 57, 62, 64], [[64, 6, 3], [67, 9, 3]]],
+      [43, [55, 59, 62, 66], [[71, 0, 6], [74, 6, 6]]], [42, [57, 61, 64, 66], [[73, 0, 6], [69, 6, 6]]], [40, [55, 59, 62, 64], [[71, 0, 3], [67, 3, 3], [64, 6, 6]]], [45, [55, 57, 61, 64], [[67, 0, 6], [64, 6, 6]]],
+      [47, [57, 59, 62, 66], [[66, 0, 6], [74, 6, 6]]], [40, [56, 59, 62, 66], [[71, 0, 6], [68, 6, 6]]], [40, [55, 59, 62, 64], [[69, 0, 6], [67, 6, 6]]], [45, [55, 57, 61, 64], [[64, 0, 12]]]
+    ];
+    var nextBar = 0, nextT = ac.currentTime + 0.2;
+    function sched(){
+      while (nextT < ac.currentTime + 1.5) {
+        var b = BARS[nextBar];
+        for (var k = 0; k < 12; k++) {
+          var t = nextT + k * TR + (Math.random() - 0.5) * 0.012;
+          keys(b[1][ARP[k]], t, TR * 1.6, 0.045 + Math.random() * 0.015);
+          brush(t, (k === 3 || k === 9) ? 0.05 : 0.016);
+        }
+        bass(b[0], nextT, TR * 5.5); bass(b[0] + 7, nextT + 6 * TR, TR * 3); bass(b[0], nextT + 9 * TR, TR * 3);
+        for (var q = 0; q < b[2].length; q++) keys(b[2][q][0], nextT + b[2][q][1] * TR + 0.02, b[2][q][2] * TR, 0.17);
+        nextT += 12 * TR; nextBar = (nextBar + 1) % BARS.length;
+      }
+    }
+    sched(); var timer = setInterval(sched, 300);
+    return { stop: function(){ clearInterval(timer); try { master.gain.cancelScheduledValues(ac.currentTime); master.gain.setValueAtTime(master.gain.value, ac.currentTime); master.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.6); } catch (e) {} setTimeout(function(){ try { ac.close(); } catch (e) {} }, 800); } };
+  }
+  btnMusic.addEventListener('click', function(){
+    if (music) { music.stop(); music = null; } else { music = startMusic(); }
+    btnMusic.setAttribute('aria-pressed', music ? 'true' : 'false');
+  });
   function stopTour(){ if (tourTimer) { clearInterval(tourTimer); tourTimer = null; btnTour.setAttribute('aria-pressed', 'false'); } }
   btnTour.addEventListener('click', function(){
     if (tourTimer) { stopTour(); return; }
@@ -771,12 +888,25 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     if (st.key) { st.key = ''; syncUi(); }
   }
 
+  /* bloom: candles, lanterns, crystals, cove light and lit fabric glow softly. Skipped on small screens and when the pass scripts are unavailable. */
+  var composer = null;
+  if (!small && T.EffectComposer && T.RenderPass && T.ShaderPass && T.UnrealBloomPass && T.GammaCorrectionShader) {
+    try {
+      var rt = (renderer.capabilities.isWebGL2 && T.WebGLMultisampleRenderTarget) ? new T.WebGLMultisampleRenderTarget(8, 8, { format: T.RGBAFormat }) : undefined;
+      composer = new T.EffectComposer(renderer, rt);
+      composer.addPass(new T.RenderPass(scene, camera));
+      composer.addPass(new T.UnrealBloomPass(new T.Vector2(512, 512), 0.42, 0.75, 0.82));
+      composer.addPass(new T.ShaderPass(T.GammaCorrectionShader));
+    } catch (err) { composer = null; }
+  }
   function resize(){
     var w = stage.clientWidth || window.innerWidth, h = stage.clientHeight || window.innerHeight;
     renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+    if (composer) { composer.setPixelRatio(renderer.getPixelRatio()); composer.setSize(w, h); }
   }
   window.addEventListener('resize', resize); resize();
   goTo('denah', true);
+  applyTheme(3);
 
   var last = performance.now(), cut = 1;
   function frame(now){
@@ -794,7 +924,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     var want = camera.position.y > 7.4 ? 1 : 0;
     cut += (want - cut) * Math.min(1, dt * 6);
     walls.scale.y = 1 - cut * 0.83;
-    tall.visible = cut < 0.5; gBTall.visible = (themeB || themeC) && cut < 0.5; gCTall.visible = themeC && cut < 0.5;
+    tall.visible = cut < 0.5; gBTall.visible = (themeB || themeC || themeD) && cut < 0.5; gCTall.visible = themeC && cut < 0.5;
     labels.visible = showLabels && cut > 0.5;
     scene.fog.density = 0.0045 * (1 - cut);
     lm += (lmTarget - lm) * Math.min(1, dt * 2.2);
@@ -806,18 +936,19 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
       mLightStrip.color.copy(STRIPBASE).multiplyScalar((1 - 0.94 * lm) * (themeC ? 0.25 : 1));
       mFix.color.copy(FIXBASE).multiplyScalar((1 - 0.97 * lm) * (themeC ? 0.25 : 1));
       mMural.emissiveIntensity = 0.28 - 0.16 * lm; mCrystal.emissiveIntensity = 0.9 - 0.5 * lm;
-      mWallDrape.emissiveIntensity = (themeB ? 0.5 : themeC ? 0.38 : 0) * (1 - 0.5 * lm); mDrape.emissiveIntensity = (themeB ? 0.45 : themeC ? 0.42 : 0) * (1 - 0.4 * lm);
+      mWallDrape.emissiveIntensity = (themeB ? 0.5 : themeC ? 0.38 : themeD ? 0.45 : 0) * (1 - 0.5 * lm); mDrape.emissiveIntensity = (themeB ? 0.45 : themeC ? 0.42 : themeD ? 0.12 : 0) * (1 - 0.4 * lm);
       mShade.emissiveIntensity = 0.9 - 0.4 * lm;
       var bo = Math.max(lm, themeC ? 0.5 : 0); for (var bm = 0; bm < BEAMS.length; bm++) { BEAMS[bm].material.opacity = 0.13 * bo; BEAMS[bm].visible = bo > 0.01; }
       renderer.toneMappingExposure = 1.25 - 0.1 * lm;
     }
     var fl = 0.86 + 0.09 * Math.sin(now * 0.009) + 0.05 * Math.sin(now * 0.023);
     glowMatA.opacity = fl; glowMatB.opacity = 0.9;
-    renderer.render(scene, camera);
+    if (composer) composer.render(); else renderer.render(scene, camera);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
 })();
 </script>
+
 
 </html>
