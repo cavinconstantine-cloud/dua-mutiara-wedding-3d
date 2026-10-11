@@ -303,8 +303,8 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     }
   }
   /* tall foliage centrepiece on a slim gold stem, for the ivory garden theme */
-  /* Sasa's reference: crimson red, crisp white, champagne, moss and sage, with a touch of bronze */
-  var PAL4 = ['#5a1230', '#6e1a3a', '#3f0c22', '#f1efe9', '#8a2a4a', '#e6dcc6', '#3f5a2a', '#8f9c78', '#56402c', '#cdb89a'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); });
+  /* Sasa's reference: about 60% crisp white, with crimson, moss, sage, champagne, tortoiseshell and bronze as accents */
+  var PAL4 = ['#5a1230', '#6e1a3a', '#f1efe9', '#f1efe9', '#f1efe9', '#e6dcc6', '#3f5a2a', '#8f9c78', '#3a1a12', '#cdb89a'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); });
   var LEAF = ['#56602f', '#3d4a26', '#6f7d3c', '#8a9a50'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); }), LEAFW = new T.Color('#f4eedd').convertSRGBToLinear();
   function tree(x, z){
     cyl(gC, mGold, x, z, 0.022, 0.76, 2.35, 6, false);
@@ -751,8 +751,8 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   btnLabels.addEventListener('click', function(){ showLabels = !showLabels; btnLabels.setAttribute('aria-pressed', showLabels ? 'true' : 'false'); });
   /* decor theme switch: recolours shared fabric, floors, chairs and flowers, and shows each theme's own pieces */
   var themeI = 0, themeB = false, themeC = false, themeD = false, selTheme = document.getElementById('selTheme');
-  var THEME = [[mWallDrape, 0x161514, 0x9c8160, 0xb3a586, 0x4a3426], [mDrape, 0x5a5c3a, 0xa98c68, 0xbcae8e, 0x4a1028], [mBurg, 0x6e1423, 0xb89c78, 0xcbbd9c, 0x34492a], [mCloth, CLOTH.getHex(), 0xb39c7c, 0xc2b494, 0xcdb89a], [mRunner, 0x6e1423, 0x8f6f58, 0x55602f, 0x5a1230], [mChair, 0x15120f, 0xb39256, 0x3a2a1c, 0x8a6a3c], [mGloss, 0x070707, 0xefe8da, 0xefe8da, 0x24100b], [mPost, 0x2a211a, 0xb39256, 0xcbbd9c, 0x5a4632], [mGlass, 0xffffff, 0xffc27a, 0xffd9a0, 0xffc27a], [mSwag, 0xb89c78, 0xb89c78, 0xcfc2a2, 0xd8c9ac], [mIvory, 0xf2ead8, 0xf2ead8, 0xf2ead8, 0x9a7650]];
-  var TH = { chairM: [0.1, 0.75, 0.15, 0.7], chairR: [0.42, 0.35, 0.5, 0.35], postM: [0.5, 0.8, 0.1, 0.85], glossR: [0.2, 0.14, 0.14, 0.17], glossE: [0.55, 0.9, 0.9, 0.5], glass: [0.22, 0.38, 0.34, 0.34], hemi: [0xffe6c8, 0xffd9a8, 0xffe2b8, 0xffe0bc] };
+  var THEME = [[mWallDrape, 0x161514, 0x9c8160, 0xb3a586, 0xdcd8cf], [mDrape, 0x5a5c3a, 0xa98c68, 0xbcae8e, 0x4a1028], [mBurg, 0x6e1423, 0xb89c78, 0xcbbd9c, 0x8f9c78], [mCloth, CLOTH.getHex(), 0xb39c7c, 0xc2b494, 0xe9e5dc], [mRunner, 0x6e1423, 0x8f6f58, 0x55602f, 0x5a1230], [mChair, 0x15120f, 0xb39256, 0x3a2a1c, 0x3a1a12], [mGloss, 0x070707, 0xefe8da, 0xefe8da, 0xf1efe9], [mPost, 0x2a211a, 0xb39256, 0xcbbd9c, 0x5a4632], [mGlass, 0xffffff, 0xffc27a, 0xffd9a0, 0xffc27a], [mSwag, 0xb89c78, 0xb89c78, 0xcfc2a2, 0xcdb89a], [mCush, 0xe9e1d0, 0xe9e1d0, 0xe9e1d0, 0x3f5a2a], [mIvory, 0xf2ead8, 0xf2ead8, 0xf2ead8, 0x9a7650]];
+  var TH = { chairM: [0.1, 0.75, 0.15, 0.2], chairR: [0.42, 0.35, 0.5, 0.25], postM: [0.5, 0.8, 0.1, 0.85], glossR: [0.2, 0.14, 0.14, 0.14], glossE: [0.55, 0.9, 0.9, 0.9], glass: [0.22, 0.38, 0.34, 0.34], hemi: [0xffe6c8, 0xffd9a8, 0xffe2b8, 0xffe0bc] };
   function applyTheme(i){
     themeI = i; themeB = i === 1; themeC = i === 2; themeD = i === 3;
     THEME.forEach(function(t){ t[0].color.setHex(t[1 + i]).convertSRGBToLinear(); });
@@ -936,7 +936,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
       mLightStrip.color.copy(STRIPBASE).multiplyScalar((1 - 0.94 * lm) * (themeC ? 0.25 : 1));
       mFix.color.copy(FIXBASE).multiplyScalar((1 - 0.97 * lm) * (themeC ? 0.25 : 1));
       mMural.emissiveIntensity = 0.28 - 0.16 * lm; mCrystal.emissiveIntensity = 0.9 - 0.5 * lm;
-      mWallDrape.emissiveIntensity = (themeB ? 0.5 : themeC ? 0.38 : themeD ? 0.45 : 0) * (1 - 0.5 * lm); mDrape.emissiveIntensity = (themeB ? 0.45 : themeC ? 0.42 : themeD ? 0.12 : 0) * (1 - 0.4 * lm);
+      mWallDrape.emissiveIntensity = (themeB ? 0.5 : themeC ? 0.38 : themeD ? 0.2 : 0) * (1 - 0.5 * lm); mDrape.emissiveIntensity = (themeB ? 0.45 : themeC ? 0.42 : themeD ? 0.12 : 0) * (1 - 0.4 * lm);
       mShade.emissiveIntensity = 0.9 - 0.4 * lm;
       var bo = Math.max(lm, themeC ? 0.5 : 0); for (var bm = 0; bm < BEAMS.length; bm++) { BEAMS[bm].material.opacity = 0.13 * bo; BEAMS[bm].visible = bo > 0.01; }
       renderer.toneMappingExposure = 1.25 - 0.1 * lm;
