@@ -414,8 +414,10 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     box(scene, mTrim, w[0] - 0.07, 0, w[1] - 0.07, w[2] + 0.07, 0.012, w[3] + 0.07, false);
     box(scene, mGloss, w[0], 0, w[1], w[2], 0.022, w[3], false);
   });
-  cyl(scene, mGloss, 23.5, 9, 2.75, 0, 0.14, 64, false);
-  (function(){ var t = new T.Mesh(new T.TorusGeometry(2.75, 0.03, 8, 96), mGold); t.rotation.x = Math.PI / 2; t.position.set(23.5, 0.14, -9); scene.add(t); })();
+  /* dance floor: a round two-tier platform with gold rings, in its own materials so it can be beige on a bronze base */
+  var mDance = std(0x070707, 0.2, 0, { envMapIntensity: 0.55 }), mDance2 = std(0x070707, 0.25, 0, { envMapIntensity: 0.55 });
+  cyl(scene, mDance2, 23.5, 9, 3.3, 0, 0.09, 96, false); cyl(scene, mDance, 23.5, 9, 2.8, 0.09, 0.18, 96, false);
+  [[3.3, 0.09, 0.028], [2.8, 0.18, 0.028], [1.6, 0.183, 0.012]].forEach(function(r){ var t = new T.Mesh(new T.TorusGeometry(r[0], r[2], 8, 128), mGold); t.rotation.x = Math.PI / 2; t.position.set(23.5, r[1], -9); scene.add(t); });
   [26.5, 29.5, 32.5, 35.5].forEach(function(x){
     mound(x, 0, 2.95, 0.5, 0.75, 0.38, 80);
     candle(x + 1.2, 0, 3.1, 0.42, true); candle(x + 1.5, 0, 2.98, 0.28, true); candle(x + 0.7, 0, 5.95, 0.36, true); candle(x + 2.2, 0, 5.95, 0.26, true);
@@ -640,7 +642,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
       });
       g.fillStyle = '#b3a17f'; g.beginPath(); g.arc(0, 0, 34, 0, 6.2832); g.fill();
     });
-    var m = new T.Mesh(new T.CircleGeometry(2.62, 72), std(0xffffff, 0.22, 0, { map: tex })); m.rotation.x = -Math.PI / 2; m.position.set(23.5, 0.149, -9); m.receiveShadow = true; gC.add(m);
+    var m = new T.Mesh(new T.CircleGeometry(2.74, 96), std(0xffffff, 0.22, 0, { map: tex })); m.rotation.x = -Math.PI / 2; m.position.set(23.5, 0.186, -9); m.receiveShadow = true; gC.add(m);
   })();
 
   /* ---------- labels ---------- */
@@ -751,13 +753,13 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   btnLabels.addEventListener('click', function(){ showLabels = !showLabels; btnLabels.setAttribute('aria-pressed', showLabels ? 'true' : 'false'); });
   /* decor theme switch: recolours shared fabric, floors, chairs and flowers, and shows each theme's own pieces */
   var themeI = 0, themeB = false, themeC = false, themeD = false, selTheme = document.getElementById('selTheme');
-  var THEME = [[mWallDrape, 0x161514, 0x9c8160, 0xb3a586, 0xcdb89a], [mDrape, 0x5a5c3a, 0xa98c68, 0xbcae8e, 0x4a1028], [mBurg, 0x6e1423, 0xb89c78, 0xcbbd9c, 0x8f9c78], [mCloth, CLOTH.getHex(), 0xb39c7c, 0xc2b494, 0xd2bea0], [mRunner, 0x6e1423, 0x8f6f58, 0x55602f, 0x5a1230], [mChair, 0x15120f, 0xb39256, 0x3a2a1c, 0x3a1a12], [mGloss, 0x070707, 0xefe8da, 0xefe8da, 0xd8c6a8], [mPost, 0x2a211a, 0xb39256, 0xcbbd9c, 0x5a4632], [mGlass, 0xffffff, 0xffc27a, 0xffd9a0, 0xffc27a], [mSwag, 0xb89c78, 0xb89c78, 0xcfc2a2, 0xcdb89a], [mCush, 0xe9e1d0, 0xe9e1d0, 0xe9e1d0, 0x3f5a2a], [mIvory, 0xf2ead8, 0xf2ead8, 0xf2ead8, 0x9a7650]];
+  var THEME = [[mWallDrape, 0x161514, 0x9c8160, 0xb3a586, 0xcdb89a], [mDrape, 0x5a5c3a, 0xa98c68, 0xbcae8e, 0x4a1028], [mBurg, 0x6e1423, 0xb89c78, 0xcbbd9c, 0xcdb89a], [mCloth, CLOTH.getHex(), 0xb39c7c, 0xc2b494, 0xd2bea0], [mRunner, 0x6e1423, 0x8f6f58, 0x55602f, 0x5a1230], [mChair, 0x15120f, 0xb39256, 0x3a2a1c, 0x3a1a12], [mGloss, 0x070707, 0xefe8da, 0xefe8da, 0xd8c6a8], [mPost, 0x2a211a, 0xb39256, 0xcbbd9c, 0x5a4632], [mGlass, 0xffffff, 0xffc27a, 0xffd9a0, 0xffc27a], [mSwag, 0xb89c78, 0xb89c78, 0xcfc2a2, 0xcdb89a], [mCush, 0xe9e1d0, 0xe9e1d0, 0xe9e1d0, 0x3f5a2a], [mDance, 0x070707, 0xefe8da, 0xefe8da, 0xcdb89a], [mDance2, 0x070707, 0xefe8da, 0xefe8da, 0x5a4632], [mIvory, 0xf2ead8, 0xf2ead8, 0xf2ead8, 0x9a7650]];
   var TH = { chairM: [0.1, 0.75, 0.15, 0.2], chairR: [0.42, 0.35, 0.5, 0.25], postM: [0.5, 0.8, 0.1, 0.85], glossR: [0.2, 0.14, 0.14, 0.14], glossE: [0.55, 0.9, 0.9, 0.9], glass: [0.22, 0.38, 0.34, 0.34], hemi: [0xffe6c8, 0xffd9a8, 0xffe2b8, 0xffe0bc] };
   function applyTheme(i){
     themeI = i; themeB = i === 1; themeC = i === 2; themeD = i === 3;
     THEME.forEach(function(t){ t[0].color.setHex(t[1 + i]).convertSRGBToLinear(); });
     mChair.metalness = TH.chairM[i]; mChair.roughness = TH.chairR[i]; mPost.metalness = TH.postM[i];
-    mGloss.roughness = TH.glossR[i]; mGloss.userData.env = TH.glossE[i]; mGlass.opacity = TH.glass[i];
+    mGloss.roughness = TH.glossR[i]; mGloss.userData.env = TH.glossE[i]; mDance.roughness = [0.2, 0.14, 0.14, 0.3][i]; mDance.userData.env = [0.55, 0.9, 0.9, 0.5][i]; mDance2.roughness = [0.2, 0.14, 0.14, 0.35][i]; mDance2.metalness = themeD ? 0.7 : 0; mDance2.userData.env = [0.55, 0.9, 0.9, 0.8][i]; mGlass.opacity = TH.glass[i];
     gA.visible = i === 0; gB.visible = themeB; gC.visible = themeC; gD.visible = themeD; mIvory.metalness = themeD ? 0.6 : 0;
     ['fl', 'fb'].forEach(function(key){
       var d = inst[key], src = [d.c, d.c2, d.c3, d.c4][i];
