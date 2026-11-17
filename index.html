@@ -263,6 +263,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   })();
   def('fb', bloomGeo, mFlowerDS, false);
   def('lily', bloomGeo, mFlowerDS, false, gD);
+  def('flT', new T.IcosahedronGeometry(1, small ? 0 : 1), mFlower, false, tall); def('fbT', bloomGeo, mFlowerDS, false, tall);
   var mBronze = std(0x5a4632, 0.35, 0.85);
   /* paper lanterns for Sasa's reference: hanging globes, floor globes and oblong table lanterns */
   var mLantern = std(0xe6d2ae, 0.9, 0, { emissive: 0xffd9a0, emissiveIntensity: 0.95 }), sphereGeo = new T.SphereGeometry(1, 24, 16), glowD = [];
@@ -299,7 +300,8 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   var PAL2 = ['#8a4a3a', '#6b3b2e', '#a8644a', '#b98a7a', '#8c5a5e', '#70484c', '#e6d8c0', '#6f7350', '#4a2024', '#c9a78c'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); }), ai = 0;
   /* ivory garden theme florals: white and cream blooms in green foliage */
   var PAL3 = ['#f2ecdc', '#e8dfc8', '#fff6e6', '#d8cfae', '#7c8a4a', '#56602f', '#3d4a26', '#9aa858', '#f0e2c0', '#c9c08a'].map(function(h){ return new T.Color(h).convertSRGBToLinear(); });
-  function mound(cx, y0, cz, rx, h, rz, n){
+  function mound(cx, y0, cz, rx, h, rz, n, sfx){
+    sfx = sfx || '';
     n = Math.round(n * (small ? 1.5 : 2.4));
     for (var i = 0; i < n; i++) {
       var u = rnd() * 2 - 1, w = rnd() * 2 - 1, d = u * u + w * w;
@@ -307,8 +309,8 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
       var t = 1 - (u * u + w * w), y = y0 + 0.05 + h * t * (0.25 + 0.75 * rnd()), s = 0.04 + 0.055 * rnd();
       var ci = (rnd() * PAL.length) | 0, ck = 0.5 + 0.45 * rnd();
       var c1 = PAL[ci].clone().multiplyScalar(ck), c2 = PAL2[ci].clone().multiplyScalar(ck + 0.05), c3 = PAL3[ci].clone().multiplyScalar(ck + 0.1), c4 = PAL4[ci].clone().multiplyScalar(ck + 0.15), c5 = PAL5[ci].clone().multiplyScalar(ck + 0.2);
-      if (rnd() < 0.62) { var bs = s * 1.3; put('fb', MT(cx + u * rx, y, cz + w * rz, (rnd() - 0.5) * 1.5, rnd() * 6, (rnd() - 0.5) * 1.5, bs, bs, bs), c1, c2, c3, c4, c5); }
-      else put('fl', M(cx + u * rx, y, cz + w * rz, rnd() * 6, s, s * (0.6 + 0.35 * rnd()), s), c1, c2, c3, c4, c5);
+      if (rnd() < 0.62) { var bs = s * 1.3; put('fb' + sfx, MT(cx + u * rx, y, cz + w * rz, (rnd() - 0.5) * 1.5, rnd() * 6, (rnd() - 0.5) * 1.5, bs, bs, bs), c1, c2, c3, c4, c5); }
+      else put('fl' + sfx, M(cx + u * rx, y, cz + w * rz, rnd() * 6, s, s * (0.6 + 0.35 * rnd()), s), c1, c2, c3, c4, c5);
     }
   }
   /* tall foliage centrepiece on a slim gold stem, for the ivory garden theme */
@@ -446,7 +448,32 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   var canopyValance = null, CR = 3.6, CH = 4.55, CXC = 23.5, CZC = 9, mPost = std(0x2a211a, 0.4, 0.5), POSTS = [];
   for (var pa = 0; pa < 6; pa++) { var pang = pa / 6 * 6.2832; POSTS.push([CXC + CR * Math.cos(pang), CZC + CR * Math.sin(pang), Math.cos(pang), Math.sin(pang)]); }
   /* main stage is open (no gazebo): florals only at its two sides */
-  var SR = 1.8; mound(CXC - SR - 0.45, 0, CZC, 0.42, 0.85, 0.5, 60); mound(CXC + SR + 0.45, 0, CZC, 0.42, 0.85, 0.5, 60);
+  var SR = 1.8;
+  /* a short glossy runway from the main stage up to the pelaminan steps */
+  box(scene, mTrim, 22.23, 0, 10.4, 24.77, 0.012, 15.55, false); box(scene, mGloss, 22.3, 0, 10.4, 24.7, 0.022, 15.5, false);
+  [11.4, 12.6, 13.8, 15.0].forEach(function(z, i){ candle(22.05, 0, z, 0.3 + (i % 2) * 0.14, true); candle(24.95, 0, z, 0.3 + ((i + 1) % 2) * 0.14, true); });
+  /* low floral wreath and a ring of hurricane candles around the stage, open towards the catwalk and the pelaminan */
+  [[-50, 50], [130, 230]].forEach(function(arc){
+    for (var dg = arc[0]; dg <= arc[1]; dg += 12.5) { var ra = dg * Math.PI / 180; mound(CXC + 2.45 * Math.cos(ra), 0, CZC + 2.45 * Math.sin(ra), 0.32, 0.42 + 0.14 * Math.abs(Math.cos(ra * 3)), 0.32, 26); }
+    for (var dc = arc[0] + 4; dc <= arc[1] - 4; dc += 9) { var rc = dc * Math.PI / 180, hc = 0.18 + 0.22 * ((dc / 9 | 0) % 3) / 2; candle(CXC + 2.02 * Math.cos(rc), 0, CZC + 2.02 * Math.sin(rc), hc, true); }
+  });
+  /* four tall gold floral stands on the diagonals */
+  [50, 130, 230, 310].forEach(function(dg){
+    var ra = dg * Math.PI / 180, x = CXC + 2.8 * Math.cos(ra), z = CZC + 2.8 * Math.sin(ra);
+    cyl(scene, mGold, x, z, 0.22, 0, 0.05, 24); cyl(scene, mGold, x, z, 0.035, 0.05, 1.95, 10); cyl(scene, mGold, x, z, 0.26, 1.93, 1.99, 24);
+    mound(x, 1.98, z, 0.5, 0.62, 0.5, 90); mound(x, 1.55, z, 0.28, 0.45, 0.28, 24);
+    candle(x + 0.32 * Math.cos(ra + 1.6), 0, z + 0.32 * Math.sin(ra + 1.6), 0.5, true); candle(x + 0.3 * Math.cos(ra - 1.6), 0, z + 0.3 * Math.sin(ra - 1.6), 0.34, true);
+  });
+  /* a floating floral ring above the stage (no posts): gold hoop on four fine cables, blooms on top and trailing strands */
+  (function(){
+    var Y = 4.75, RR = 1.95, t = new T.Mesh(new T.TorusGeometry(RR, 0.035, 8, 120), mGold); t.rotation.x = Math.PI / 2; t.position.set(CXC, Y, -CZC); tall.add(t);
+    for (var k = 0; k < 4; k++) { var a = k / 4 * 6.2832 + 0.785; cyl(tall, mGold, CXC + RR * Math.cos(a), CZC + RR * Math.sin(a), 0.006, Y, 6.98, 4, false); }
+    for (var j = 0; j < 30; j++) { var b = j / 30 * 6.2832; mound(CXC + RR * Math.cos(b), Y - 0.08, CZC + RR * Math.sin(b), 0.26, 0.26, 0.26, 16, 'T'); }
+    for (var q = 0; q < 46; q++) {
+      var c = q / 46 * 6.2832 + rnd() * 0.1, len = 0.5 + 1.0 * rnd(), n = Math.round(len / 0.07);
+      for (var st = 0; st < n; st++) { var f = st / n, r0 = RR + (rnd() - 0.5) * 0.12; mound(CXC + r0 * Math.cos(c), Y - 0.12 - f * len, CZC + r0 * Math.sin(c), 0.035 + 0.03 * (1 - f), 0.02, 0.035 + 0.03 * (1 - f), 0.4, 'T'); }
+    }
+  })();
 
   function chandelier(parent, key, x, y, z, s, top, intensity, dist){
     var rr = [1.0, 0.7, 0.4], yy = [0.35, 0, -0.32], nn = [20, 14, 8];
@@ -529,8 +556,8 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     if (num % 2 === 1) lantern(cx, cz);
     if (num % 2 === 0) tree(cx, cz); else { cyl(gC, mGold, cx, cz, 0.012, 0.76, 1.2, 6, false); shade(gC, cx, cz, 1.16, 0.07, 0.14, 0.22, glowC); }
   }
-  [[13.5, 3.5], [13.5, 8.5], [13.5, 13.5], [10, 6], [10, 11], [6.5, 3.5], [6.5, 8.5], [6.5, 13.5], [3, 6], [3, 11]].forEach(function(p, i){ roundTable(p[0], p[1], i + 1); });
-  [[32.8, 8.2], [32.8, 12.7], [32.8, 17.2], [35.9, 10.4], [35.9, 15], [39, 8.2], [39, 12.7], [39, 17.2], [42.1, 10.4], [42.1, 15]].forEach(function(p, i){ roundTable(p[0], p[1], i + 11); });
+  [[15.3, 3.5], [15.3, 8.5], [15.3, 13.5], [11.8, 6], [11.8, 11], [8.3, 3.5], [8.3, 8.5], [8.3, 13.5], [4.8, 6], [4.8, 11]].forEach(function(p, i){ roundTable(p[0], p[1], i + 1); });
+  [[32, 8.2], [32, 12.4], [32, 16.6], [35.1, 10.3], [35.1, 14.5], [38.2, 8.2], [38.2, 12.4], [38.2, 16.6], [41.3, 10.3], [41.3, 14.5]].forEach(function(p, i){ roundTable(p[0], p[1], i + 11); });
   function familyTable(cx, cz, name){
     put('clothBox', M(cx, 0.39, cz, 0, 1.1, 0.74, 3.0)); put('blob', M(cx, 0.006, cz, 0, 1.9, 1, 2.3));
     put('runner', M(cx, 0.766, cz, 0, 0.34, 0.01, 3.0));
@@ -543,7 +570,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     textSprite(name, cx, 1.7, cz, 'pill');
     cyl(gC, mGold, cx, cz, 0.012, 0.76, 1.2, 6, false); shade(gC, cx, cz, 1.16, 0.07, 0.14, 0.22, glowC);
   }
-  [7.8, 10.8, 13.8].forEach(function(z, i){ familyTable(17.1, z, 'Kel. A' + (i + 1)); familyTable(29.9, z, 'Kel. B' + (i + 1)); });
+  [7.8, 10.8, 13.8].forEach(function(z, i){ familyTable(19.2, z, 'Kel. A' + (i + 1)); familyTable(27.8, z, 'Kel. B' + (i + 1)); });
   /* keluarga inti: 10 seats on one side, facing the pelaminan straight across the dance floor */
   put('clothBox', M(23.5, 0.39, 1.7, 0, 6.5, 0.74, 1.0)); put('blob', M(23.5, 0.006, 1.5, 0, 4.2, 1, 1.6));
   put('runner', M(23.5, 0.766, 1.93, 0, 6.5, 0.01, 0.3));
@@ -707,7 +734,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
       [-1, 1].forEach(function(sd){ md(CXC + sd * (SR + 0.55), 0, CZC, 0.6, 1.4, 0.85, 420); });
       /* a continuous hedge of flowers down both sides of the catwalk */
       for (var x = 25.0; x <= 36.9; x += 1.4) md(x, 0, 2.85, 0.8, 0.75 + 0.5 * rnd(), 0.42, 230);
-      for (var x2 = 26.3; x2 <= 37.4; x2 += 1.4) md(x2, 0, 6.08, 0.8, 0.6 + 0.4 * rnd(), 0.3, 190);
+      for (var x2 = 29.1; x2 <= 37.4; x2 += 1.4) md(x2, 0, 6.08, 0.8, 0.6 + 0.4 * rnd(), 0.3, 190);
       md(40.85, 0, 3.2, 0.5, 1.1, 0.9, 220); md(37.15, 0, 1.4, 0.5, 1.0, 0.7, 200); md(40.8, 0, 0.9, 0.45, 0.9, 0.6, 160);
       /* around the gazebo, leaving the walk to the pelaminan open */
       [20, 40, 140, 160, 200, 220, 320, 340].forEach(function(deg){ var a = deg * Math.PI / 180; md(CXC + (SR + 0.5) * Math.cos(a), 0, CZC + (SR + 0.5) * Math.sin(a), 0.42, 0.6, 0.42, 110); });
@@ -764,6 +791,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     return s;
   }
   reg(spot(23.5, 6.8, 11.5, 23.5, 1.6, 19, 0xfff0dc, 1.7, 0.55, 0.7, 30, true, small ? 1024 : 2048), 1.7, 2.3);
+  reg(spot(23.5, 6.9, 9, 23.5, 0, 9, 0xfff0dc, 0.9, 0.36, 0.6, 14, false), 0.9, 1.5);
   reg(spot(8.5, 6.9, 9, 8.5, 0, 9, 0xffe2c0, 1.05, 1.05, 0.8, 24, !small, 1024), 1.05, 0, 1);
   reg(spot(37.5, 6.9, 12, 37.5, 0, 12, 0xffe2c0, 1.05, 1.05, 0.8, 24, !small, 1024), 1.05, 0, 1);
   reg(spot(30, 6.9, 4, 29, 0, 4.5, 0xffe2c0, 0.8, 1.0, 0.8, 22, false), 0.8, 0, 1);
@@ -843,8 +871,8 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     mChair.metalness = TH.chairM[i]; mChair.roughness = TH.chairR[i]; mPost.metalness = TH.postM[i];
     mGloss.roughness = TH.glossR[i]; mGloss.userData.env = TH.glossE[i]; mDance.roughness = [0.2, 0.14, 0.14, 0.3, 0.08][i]; mDance.userData.env = [0.55, 0.9, 0.9, 0.5, 0.4][i]; mDance2.roughness = [0.2, 0.14, 0.14, 0.35, 0.12][i]; mDance2.metalness = themeD ? 0.7 : 0; mDance2.userData.env = [0.55, 0.9, 0.9, 0.8, 0.4][i]; mGlass.opacity = TH.glass[i];
     gA.visible = i === 0; gB.visible = themeB; gC.visible = themeC; gD.visible = themeD; mIvory.metalness = themeD ? 0.6 : 0; gE.visible = themeE; gF.visible = i === 0; gGaz.visible = false; mirrors.forEach(function(r){ r.visible = (i === 0 || themeE); });
-    ['fl', 'fb'].forEach(function(key){
-      var d = inst[key], src = [d.c, d.c2, d.c3, d.c4, d.c5][i];
+    ['fl', 'fb', 'flT', 'fbT'].forEach(function(key){
+      var d = inst[key]; if (!d) return; var dd = d, src = [d.c, d.c2, d.c3, d.c4, d.c5][i];
       if (d.mesh) { for (var k = 0; k < src.length; k++) d.mesh.setColorAt(k, src[k]); d.mesh.instanceColor.needsUpdate = true; }
     });
     hemi.color.setHex(TH.hemi[i]);
