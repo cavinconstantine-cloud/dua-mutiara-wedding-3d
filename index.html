@@ -43,7 +43,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
 </style>
 
-<div id="stage" role="img" aria-label="Ruang 3D Dua Mutiara Ballroom dengan dekorasi wedding: pelaminan, dance floor, meja tamu, catwalk dan foyer"></div>
+<div id="stage" role="img" aria-label="Ruang 3D Dua Mutiara Ballroom dengan dekorasi wedding: pelaminan, main stage, meja tamu, catwalk dan foyer"></div>
 <div class="head">
   <div class="eyebrow">JW MARRIOTT JAKARTA · DUA MUTIARA BALLROOM 45 × 20 × 7 M</div>
   <h1 id="viewName">Denah 3D</h1>
@@ -427,33 +427,26 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
 
   /* ---------- catwalk and dance floor ---------- */
   var mTrim = std(0xbfa97f, 0.4, 0.6);
-  [[38, -0.6, 40, 5.6], [22.4, 3.4, 40, 5.6], [22.4, 5.6, 24.6, 6.6]].forEach(function(w){
+  [[38, -0.6, 40, 0.2], [37.8, 0, 40.2, 5.7], [22.3, 3.3, 40.2, 5.7], [22.3, 5.7, 24.7, 7.6]].forEach(function(w){
     box(scene, mTrim, w[0] - 0.07, 0, w[1] - 0.07, w[2] + 0.07, 0.012, w[3] + 0.07, false);
     box(scene, mGloss, w[0], 0, w[1], w[2], 0.022, w[3], false);
   });
   /* dance floor: a round two-tier platform with gold rings, in its own materials so it can be beige on a bronze base */
   var mDance = std(0x070707, 0.2, 0, { envMapIntensity: 0.55 }), mDance2 = std(0x070707, 0.25, 0, { envMapIntensity: 0.55 });
-  cyl(scene, mDance2, 23.5, 9, 3.3, 0, 0.09, 96, false); cyl(scene, mDance, 23.5, 9, 2.8, 0.09, 0.18, 96, false);
-  [[3.3, 0.09, 0.028], [2.8, 0.18, 0.028], [1.6, 0.183, 0.012]].forEach(function(r){ var t = new T.Mesh(new T.TorusGeometry(r[0], r[2], 8, 128), mGold); t.rotation.x = Math.PI / 2; t.position.set(23.5, r[1], -9); scene.add(t); });
+  cyl(scene, mDance2, 23.5, 9, 1.8, 0, 0.09, 96, false); cyl(scene, mDance, 23.5, 9, 1.55, 0.09, 0.18, 96, false);
+  [[1.8, 0.09, 0.024], [1.55, 0.18, 0.024], [0.85, 0.183, 0.01]].forEach(function(r){ var t = new T.Mesh(new T.TorusGeometry(r[0], r[2], 8, 128), mGold); t.rotation.x = Math.PI / 2; t.position.set(23.5, r[1], -9); scene.add(t); });
   [26.5, 29.5, 32.5, 35.5].forEach(function(x){
-    mound(x, 0, 2.95, 0.5, 0.75, 0.38, 80);
-    candle(x + 1.2, 0, 3.1, 0.42, true); candle(x + 1.5, 0, 2.98, 0.28, true); candle(x + 0.7, 0, 5.95, 0.36, true); candle(x + 2.2, 0, 5.95, 0.26, true);
+    mound(x, 0, 2.85, 0.5, 0.75, 0.38, 80);
+    candle(x + 1.2, 0, 2.95, 0.42, true); candle(x + 1.5, 0, 2.85, 0.28, true); candle(x + 0.7, 0, 6.05, 0.36, true); candle(x + 2.2, 0, 6.05, 0.26, true);
   });
-  mound(37.5, 0, 1.5, 0.42, 0.8, 0.5, 70); mound(40.5, 0, 1.5, 0.42, 0.8, 0.5, 70); mound(40.5, 0, 4.6, 0.42, 0.8, 0.5, 70);
+  mound(37.3, 0, 1.5, 0.42, 0.8, 0.5, 70); mound(40.7, 0, 1.5, 0.42, 0.8, 0.5, 70); mound(40.7, 0, 4.6, 0.42, 0.8, 0.5, 70);
 
   /* canopy */
-  /* round gazebo: six posts on a ring beam, a sagging round fabric roof and a pleated circular valance */
+  /* main stage centre; the old gazebo ring (CR, POSTS) is kept only as a reference for the hidden gazebo group */
   var canopyValance = null, CR = 3.6, CH = 4.55, CXC = 23.5, CZC = 9, mPost = std(0x2a211a, 0.4, 0.5), POSTS = [];
   for (var pa = 0; pa < 6; pa++) { var pang = pa / 6 * 6.2832; POSTS.push([CXC + CR * Math.cos(pang), CZC + CR * Math.sin(pang), Math.cos(pang), Math.sin(pang)]); }
-  POSTS.forEach(function(p){ cyl(scene, mPost, p[0], p[1], 0.07, 0, CH, 12); mound(p[0], 0, p[1], 0.42, 0.85, 0.42, 50); });
-  (function(){ var t = new T.Mesh(new T.TorusGeometry(CR, 0.08, 10, 96), mPost); t.rotation.x = Math.PI / 2; t.position.set(CXC, CH + 0.08, -CZC); t.castShadow = true; scene.add(t); })();
-  (function(){
-    var g = new T.RingGeometry(0.01, CR, 96, 18), p = g.attributes.position;
-    for (var i = 0; i < p.count; i++) { var x = p.getX(i), y = p.getY(i), r = Math.hypot(x, y) / CR; p.setZ(i, -0.55 * Math.cos(r * 1.5708) + 0.03 * r * Math.sin(Math.atan2(y, x) * 36)); }
-    g.computeVertexNormals();
-    var m = new T.Mesh(g, mBurg); m.rotation.x = -Math.PI / 2; m.position.set(CXC, CH + 0.1, -CZC); m.castShadow = true; scene.add(m);
-    var v = new T.Mesh(pleated(CR, CR, 0.62, 90), mBurg); v.position.set(CXC, CH - 0.26, -CZC); v.castShadow = true; scene.add(v); canopyValance = v;
-  })();
+  /* main stage is open (no gazebo): florals only at its two sides */
+  var SR = 1.8; mound(CXC - SR - 0.45, 0, CZC, 0.42, 0.85, 0.5, 60); mound(CXC + SR + 0.45, 0, CZC, 0.42, 0.85, 0.5, 60);
 
   function chandelier(parent, key, x, y, z, s, top, intensity, dist){
     var rr = [1.0, 0.7, 0.4], yy = [0.35, 0, -0.32], nn = [20, 14, 8];
@@ -469,7 +462,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     var pl = new T.PointLight(0xffc68a, intensity, dist, 1.6); pl.position.set(x, y - 0.1, -z); scene.add(pl);
     return pl;
   }
-  var canopyLight = chandelier(gChand, 'crystal', 23.5, 3.2, 9, 0.85, 4.1, 1.25, 14);
+  var canopyLight = chandelier(gChand, 'crystal', 23.5, 4.3, 9, 0.85, 6.95, 1.25, 14);
   chandelier(tall, 'crystalTall', 24.5, 3.2, -5, 0.6, 4, 0.9, 13);
   chandelier(tall, 'crystalTall', 34, 3.2, -7.5, 0.6, 4, 0.9, 13);
 
@@ -524,11 +517,11 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
 
   /* ---------- tables ---------- */
   function roundTable(cx, cz, num){
-    put('rcloth', M(cx, 0, cz, rnd() * 6, 1, 1, 1)); put('blob', M(cx, 0.006, cz, 0, 2.0, 1, 2.0));
+    put('rcloth', M(cx, 0, cz, rnd() * 6, 0.947, 1, 0.947)); put('blob', M(cx, 0.006, cz, 0, 1.9, 1, 1.9));
     for (var i = 0; i < 10; i++) {
       var a = i / 10 * 6.2832 + 0.2, ca = Math.cos(a), sa = Math.sin(a);
-      chair(cx + 1.3 * ca, cz + 1.3 * sa, -ca, -sa, 0);
-      setting(cx + 0.68 * ca, cz + 0.68 * sa, ca, sa);
+      chair(cx + 1.2 * ca, cz + 1.2 * sa, -ca, -sa, 0);
+      setting(cx + 0.64 * ca, cz + 0.64 * sa, ca, sa);
     }
     mound(cx, 0.76, cz, 0.3, 0.42, 0.3, 36);
     candle(cx + 0.4, 0.76, cz + 0.1, 0.22, true); candle(cx - 0.3, 0.76, cz - 0.3, 0.3, true); candle(cx - 0.14, 0.76, cz + 0.4, 0.16, true);
@@ -610,7 +603,6 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   [25.4, 28.4, 31.4, 34.4].forEach(function(x){ shade(gB, x, 2.55, 0, 0.2, 0.6, 1.5); });
   shade(gB, 20.2, 15.3, 0, 0.2, 0.62, 1.7); shade(gB, 26.8, 15.3, 0, 0.2, 0.62, 1.7);
   shade(gB, 11.7, -4.6, 0, 0.1, 1.5, 3.3); shade(gB, 12.9, -7.3, 0, 0.18, 0.55, 1.5); shade(gB, 12.9, -1.9, 0, 0.18, 0.55, 1.5);
-  POSTS.forEach(function(p){ drape(gB, mDrape, p[0] - p[3] * 0.5, p[1] + p[2] * 0.5, p[0] + p[3] * 0.5, p[1] - p[2] * 0.5, 0, CH - 0.6); });
   (function(){
     var g = new T.PlaneGeometry(12, 4.2, 140, 20), p = g.attributes.position;
     for (var i = 0; i < p.count; i++) { var u = (p.getX(i) + 6) / 12 * 4, f = u - Math.floor(u), v = (p.getY(i) + 2.1) / 4.2; p.setZ(i, -0.8 * Math.sin(Math.PI * f) * (0.5 + 0.5 * Math.sin(Math.PI * v)) + 0.03 * Math.sin(p.getY(i) * 26)); }
@@ -630,7 +622,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     var g = new T.LatheGeometry(pts, 120), p = g.attributes.position;
     for (var i = 0; i < p.count; i++) { var x = p.getX(i), z = p.getZ(i), y = p.getY(i), ang = Math.atan2(x, z), r = Math.hypot(x, z) / 4.7, kk = 1 + 0.03 * Math.sin(ang * 44) * r; p.setX(i, x * kk); p.setZ(i, z * kk); if (y < 0.3) p.setY(i, y - 0.22 * Math.abs(Math.sin(ang * 6)) * r); }
     g.computeVertexNormals();
-    var m = new T.Mesh(g, mSwag); m.position.set(23.5, 4.8, -9); gCTall.add(m);
+    /* fabric dome over the stage removed: the main stage has no canopy */
   })();
 
   /* Sasa's reference pieces: ivory drapes framing a crimson velvet backdrop, hanging and floor lanterns, white calla sprays on bronze stands */
@@ -659,7 +651,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
       });
       g.fillStyle = '#b3a17f'; g.beginPath(); g.arc(0, 0, 34, 0, 6.2832); g.fill();
     });
-    var m = new T.Mesh(new T.CircleGeometry(2.74, 96), std(0xffffff, 0.22, 0, { map: tex })); m.rotation.x = -Math.PI / 2; m.position.set(23.5, 0.186, -9); m.receiveShadow = true; gC.add(m);
+    var m = new T.Mesh(new T.CircleGeometry(1.53, 96), std(0xffffff, 0.22, 0, { map: tex })); m.rotation.x = -Math.PI / 2; m.position.set(23.5, 0.186, -9); m.receiveShadow = true; gC.add(m);
   })();
 
   /* ---------- Burgundy gazebo pieces, after the JW Marriott reference: a tall burgundy pelmet, sheer inner tiers, a glowing paper-flower cloud with hanging blooms, ruched posts and lush mixed florals ---------- */
@@ -712,13 +704,13 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
         }
         for (var b = 0; b < Math.round(n / 14); b++) put('gr' + tag, MT(cx + (rnd() * 2 - 1) * rx, y0, cz + (rnd() * 2 - 1) * rz, (rnd() - 0.5) * 0.7, rnd() * 6, (rnd() - 0.5) * 0.7, 0.009, h * (0.5 + rnd() * 0.6), 0.009), GR[(rnd() * 3) | 0].clone().multiplyScalar(0.7 + 0.5 * rnd()));
       }
-      POSTS.forEach(function(p, i){ var side = (i === 0 || i === 3); md(p[0] + p[2] * 0.35, 0, p[1] + p[3] * 0.35, side ? 1.0 : 0.62, side ? 1.6 : 1.25, side ? 1.0 : 0.62, side ? 460 : 280); });
+      [-1, 1].forEach(function(sd){ md(CXC + sd * (SR + 0.55), 0, CZC, 0.6, 1.4, 0.85, 420); });
       /* a continuous hedge of flowers down both sides of the catwalk */
-      for (var x = 25.0; x <= 37.6; x += 1.4) md(x, 0, 2.85, 0.8, 0.75 + 0.5 * rnd(), 0.42, 230);
+      for (var x = 25.0; x <= 36.9; x += 1.4) md(x, 0, 2.85, 0.8, 0.75 + 0.5 * rnd(), 0.42, 230);
       for (var x2 = 26.3; x2 <= 37.4; x2 += 1.4) md(x2, 0, 6.08, 0.8, 0.6 + 0.4 * rnd(), 0.3, 190);
-      md(41.0, 0, 3.2, 0.5, 1.1, 0.9, 220); md(37.2, 0, 1.4, 0.5, 1.0, 0.7, 200); md(40.9, 0, 0.9, 0.45, 0.9, 0.6, 160);
+      md(40.85, 0, 3.2, 0.5, 1.1, 0.9, 220); md(37.15, 0, 1.4, 0.5, 1.0, 0.7, 200); md(40.8, 0, 0.9, 0.45, 0.9, 0.6, 160);
       /* around the gazebo, leaving the walk to the pelaminan open */
-      [20, 40, 140, 160, 200, 220, 320, 340].forEach(function(deg){ var a = deg * Math.PI / 180; md(CXC + (CR + 0.55) * Math.cos(a), 0, CZC + (CR + 0.55) * Math.sin(a), 0.6, 0.7, 0.6, 150); });
+      [20, 40, 140, 160, 200, 220, 320, 340].forEach(function(deg){ var a = deg * Math.PI / 180; md(CXC + (SR + 0.5) * Math.cos(a), 0, CZC + (SR + 0.5) * Math.sin(a), 0.42, 0.6, 0.42, 110); });
       md(18.6, 0, 15.6, 1.1, 1.2, 0.45, 300); md(28.4, 0, 15.6, 1.1, 1.2, 0.45, 300);
     }
     lush('E', gE, PAL5); lush('F', gF, PF);
@@ -728,14 +720,14 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   if (!small && T.Reflector) {
     try {
       var mk = function(geo, y){ var r = new T.Reflector(geo, { textureWidth: 1024, textureHeight: 1024, color: 0x343434, clipBias: 0.003 }); r.rotation.x = -Math.PI / 2; r.position.y = y; r.visible = false; scene.add(r); mirrors.push(r); return r; };
-      var cg = new T.CircleGeometry(2.79, 96); cg.translate(23.5, 9, 0); mk(cg, 0.1818);
-      var ws = new T.Shape(); ws.moveTo(38, -0.6); ws.lineTo(40, -0.6); ws.lineTo(40, 5.6); ws.lineTo(24.6, 5.6); ws.lineTo(24.6, 6.6); ws.lineTo(22.4, 6.6); ws.lineTo(22.4, 3.4); ws.lineTo(38, 3.4); ws.closePath();
+      var cg = new T.CircleGeometry(1.54, 96); cg.translate(23.5, 9, 0); mk(cg, 0.1818);
+      var ws = new T.Shape(); ws.moveTo(38, -0.6); ws.lineTo(40, -0.6); ws.lineTo(40, 0); ws.lineTo(40.2, 0); ws.lineTo(40.2, 5.7); ws.lineTo(24.7, 5.7); ws.lineTo(24.7, 7.6); ws.lineTo(22.3, 7.6); ws.lineTo(22.3, 3.3); ws.lineTo(37.8, 3.3); ws.lineTo(37.8, 0); ws.lineTo(38, 0); ws.closePath();
       mk(new T.ShapeGeometry(ws), 0.0245);
     } catch (err) { mirrors = []; }
   }
 
   /* ---------- labels ---------- */
-  [['PELAMINAN', 23.5, 18.6], ['DANCE FLOOR', 23.5, 9], ['MUSIC', 5.5, 18.6], ['STALL MAKANAN', 2.4, 16.6], ['STALL MAKANAN', 42.6, 6.6], ['CATWALK', 31.5, 4.5], ['PINTU MASUK', 39, -1.4], ['PINTU', 7.7, -1.2], ['2 PINTU DITUTUP', 23.5, -1.2], ['PHOTOBOOTH', 13.4, -4.6], ['REGISTRASI', 20.5, -7.0], ['WELCOME SIGN', 35.6, -6.8], ['TANGGA', 42.3, -3.6], ['LIFT', 41.5, -12.5]].forEach(function(a){ textSprite(a[0], a[1], 0.6, a[2], 'area'); });
+  [['PELAMINAN', 23.5, 18.6], ['MAIN STAGE', 23.5, 9], ['MUSIC', 5.5, 18.6], ['STALL MAKANAN', 2.4, 16.6], ['STALL MAKANAN', 42.6, 6.6], ['CATWALK', 31.5, 4.5], ['PINTU MASUK', 39, -1.4], ['PINTU', 7.7, -1.2], ['2 PINTU DITUTUP', 23.5, -1.2], ['PHOTOBOOTH', 13.4, -4.6], ['REGISTRASI', 20.5, -7.0], ['WELCOME SIGN', 35.6, -6.8], ['TANGGA', 42.3, -3.6], ['LIFT', 41.5, -12.5]].forEach(function(a){ textSprite(a[0], a[1], 0.6, a[2], 'area'); });
 
   flush();
 
@@ -788,7 +780,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     ['atas', 'Tampak atas', 'o', 22.5, 0, 2.5, 68, 0, 1.5],
     ['masuk', 'Pintu masuk', 'f', 39, 1.65, 0.9, 34, 1.9, 8.5, 66],
     ['catwalk', 'Di catwalk', 'f', 37, 1.65, 4.5, 23.5, 2.4, 11, 64],
-    ['dance', 'Dance floor', 'f', 23.5, 1.75, 6.9, 23.5, 2.3, 18.5, 62],
+    ['dance', 'Main stage', 'f', 23.5, 1.8, 4.4, 23.5, 0.9, 14.5, 62],
     ['pelaminan', 'Dari pelaminan', 'f', 23.5, 2.35, 16.9, 23.5, 1.3, 0, 72],
     ['keluarga', 'Meja keluarga inti', 'f', 23.5, 1.3, 0.95, 23.5, 1.9, 18.5, 56],
     ['tamu', 'Meja tamu', 'f', 34.5, 1.35, 12, 23.5, 2.5, 18, 60],
@@ -850,7 +842,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     THEME.forEach(function(t){ t[0].color.setHex(t[1 + i]).convertSRGBToLinear(); });
     mChair.metalness = TH.chairM[i]; mChair.roughness = TH.chairR[i]; mPost.metalness = TH.postM[i];
     mGloss.roughness = TH.glossR[i]; mGloss.userData.env = TH.glossE[i]; mDance.roughness = [0.2, 0.14, 0.14, 0.3, 0.08][i]; mDance.userData.env = [0.55, 0.9, 0.9, 0.5, 0.4][i]; mDance2.roughness = [0.2, 0.14, 0.14, 0.35, 0.12][i]; mDance2.metalness = themeD ? 0.7 : 0; mDance2.userData.env = [0.55, 0.9, 0.9, 0.8, 0.4][i]; mGlass.opacity = TH.glass[i];
-    gA.visible = i === 0; gB.visible = themeB; gC.visible = themeC; gD.visible = themeD; mIvory.metalness = themeD ? 0.6 : 0; gE.visible = themeE; gF.visible = i === 0; var gz = (i === 0 || themeE); gGaz.visible = gz; gChand.visible = !gz; if (canopyValance) canopyValance.visible = !gz; mirrors.forEach(function(r){ r.visible = (i === 0 || themeE); });
+    gA.visible = i === 0; gB.visible = themeB; gC.visible = themeC; gD.visible = themeD; mIvory.metalness = themeD ? 0.6 : 0; gE.visible = themeE; gF.visible = i === 0; gGaz.visible = false; mirrors.forEach(function(r){ r.visible = (i === 0 || themeE); });
     ['fl', 'fb'].forEach(function(key){
       var d = inst[key], src = [d.c, d.c2, d.c3, d.c4, d.c5][i];
       if (d.mesh) { for (var k = 0; k < src.length; k++) d.mesh.setColorAt(k, src[k]); d.mesh.instanceColor.needsUpdate = true; }
@@ -1018,7 +1010,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
     var nearWant = camera.position.y > 7.4 ? 2 : 0.1; if (camera.near !== nearWant) { camera.near = nearWant; camera.updateProjectionMatrix(); }
     cut += (want - cut) * Math.min(1, dt * 6);
     walls.scale.y = 1 - cut * 0.83;
-    tall.visible = cut < 0.5; gBTall.visible = (themeI === 0 || themeB || themeC || themeD || themeE) && cut < 0.5; gCTall.visible = themeC && cut < 0.5;
+    tall.visible = cut < 0.5; gChand.visible = cut < 0.5; gBTall.visible = (themeI === 0 || themeB || themeC || themeD || themeE) && cut < 0.5; gCTall.visible = themeC && cut < 0.5;
     labels.visible = showLabels && cut > 0.5;
     scene.fog.density = 0.0045 * (1 - cut);
     lm += (lmTarget - lm) * Math.min(1, dt * 2.2);
@@ -1043,6 +1035,7 @@ button[aria-pressed="true"]{background:var(--cream);color:#1a1412;border-color:v
   requestAnimationFrame(frame);
 })();
 </script>
+
 
 
 </html>
